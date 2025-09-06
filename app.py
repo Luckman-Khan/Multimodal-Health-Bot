@@ -5,17 +5,16 @@ from flask import Flask, request
 from twilio.twiml.messaging_response import MessagingResponse
 from dotenv import load_dotenv
 
-# Load environment variables from .env file for local testing
+# Load environment variables
 load_dotenv()
 
 app = Flask(__name__)
 
-# --- Configuration ---
-# This is the correct way to get the API key from the environment
+# Configure Gemini API
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 genai.configure(api_key=GEMINI_API_KEY)
 
-# Load your custom knowledge base from a file
+# Load custom knowledge base
 try:
     with open('knowledge.txt', 'r', encoding='utf-8') as f:
         knowledge_base = f.read()
@@ -34,40 +33,46 @@ def whatsapp_reply():
     try:
         # --- Image (Multimodal) Logic ---
         if media_url:
-            model = genai.GenerativeModel('gemini-1.0-pro-vision')
+            model = genai.GenerativeModel('gemini-1.5-flash-latest')
             image_response = requests.get(media_url)
-            image_data = image_response.content
-            image_parts = [{"mime_type": "image/jpeg", "data": image_data}]
-
-            prompt = """
-            You are a helpful AI health assistant.
-            IMPORTANT: Start your response with this exact disclaimer in bold: '*I am an AI assistant, not a doctor. Please consult a healthcare professional for medical advice.*'
-            Describe what you see in simple terms. DO NOT give a diagnosis.
-            """
             
-            response = model.generate_content([prompt, image_parts[0]], stream=False)
-            response.resolve()
-            msg.body(response.text)
+            mime_type = image_response.headers.get('Content-Type')
+            
+            if mime_type and mime_type.startswith('image/'):
+                image_data = image_response.content
+                image_parts = [{"mime_type": mime_type, "data": image_data}]
+
+                prompt = """
+                You are a helpful AI health assistant.
+                IMPORTANT: Start your response with this exact disclaimer in bold: '*I am an AI assistant, not a doctor. Please consult a healthcare professional for medical advice.*'
+                Describe what you see in simple terms. DO NOT give a diagnosis.
+                """
+
+                response = model.generate_content([prompt, image_parts[0]], stream=False)
+                response.resolve()
+                msg.body(response.text)
+            else:
+                msg.body("Sorry, I could not process the image file. Please send a standard image format like JPEG or PNG.")
 
         # --- Text Logic ---
         else:
-            model = genai.GenerativeModel('gemini-1.0-pro')
+            model = genai.GenerativeModel('gemini-1.5-flash-latest')
             prompt = f"""
             Answer the user's question based ONLY on the following information:
             ---
             {knowledge_base}
             ---
             User's question: "{incoming_msg}"
-            If the question is not in the information, say 'I can only answer questions about topics in my knowledge base.'
+            If the question is not in the information, say:
+            'I can only answer questions about topics in my knowledge base.'
             """
-            
+
             response = model.generate_content(prompt)
             msg.body(response.text)
 
     except Exception as e:
-        error_message = "Sorry, I encountered an error. Please try again later."
         print(f"An error occurred: {e}")
-        msg.body(error_message)
+        msg.body("Sorry, I encountered an error. Please try again later.")
 
     return str(resp)
 
