@@ -6,3 +6,11 @@ When to see a doctor: If there is blood in the stool, high fever, or the child i
 Topic: Tuberculosis (TB)
 Symptoms: Coughing for more than 2 weeks, sometimes with blood, fever, night sweats, weight loss.
 Action: Go to the nearest government clinic for a free sputum test.
+
+Topic: Child Vaccination Schedule
+- At Birth: BCG, Oral Polio Vaccine (OPV 0), Hepatitis B (Hep-B 1)
+- At 6 weeks: Pentavalent 1, OPV 1, Rotavirus 1, PCV 1
+- At 10 weeks: Pentavalent 2, OPV 2, Rotavirus 2
+- At 14 weeks: Pentavalent 3, OPV 3, Rotavirus 3, PCV 2
+- At 9 months: Measles-Rubella (MR 1), PCV Booster
+- At 16-24 months: DPT Booster 1, OPV Booster, MR 2
