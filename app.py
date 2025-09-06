@@ -37,6 +37,7 @@ def whatsapp_reply():
             image_response = requests.get(media_url)
             
             mime_type = image_response.headers.get('Content-Type')
+            print(f"Debug: Detected MIME Type is:{mime_type}")
             
             if mime_type and mime_type.startswith('image/'):
                 image_data = image_response.content
@@ -78,4 +79,5 @@ def whatsapp_reply():
 
 
 if __name__ == "__main__":
+
     app.run(port=5000, debug=True)
