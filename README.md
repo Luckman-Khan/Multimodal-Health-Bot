@@ -1,4 +1,4 @@
-# Project-Aarogya (or your chosen name)
+# Multimodal-Health-Bot
 
 A multilingual, multimodal AI health assistant on WhatsApp, designed to provide accessible preventive healthcare information to rural and semi-urban populations in India.
 
@@ -8,7 +8,7 @@ Access to clear, simple, and timely healthcare information is a significant chal
 
 ## ✨ Our Solution
 
-**Project-Aarogya** is a WhatsApp chatbot powered by Google's Gemini Pro model. It bridges the information gap by allowing users to:
+**Multimodal-Health-Bot** is a WhatsApp chatbot powered by Google's Gemini Pro model. It bridges the information gap by allowing users to:
 - Ask health questions in their native language.
 - Get information on disease symptoms and preventive care.
 - Send pictures (e.g., of a skin rash, medicine strip) for preliminary, non-diagnostic information.
