@@ -43,6 +43,8 @@ def whatsapp_reply():
             You are a helpful AI health assistant.
             IMPORTANT: Start your response with this exact disclaimer in bold: '*I am an AI assistant, not a doctor. Please consult a healthcare professional for medical advice.*'
             Describe what you see in simple terms. DO NOT give a diagnosis.
+            If it looks like medicine, describe it generally.
+            If it looks like a skin condition, describe it (e.g., redness, swelling).
             """
             
             response = model.generate_content([prompt, image_parts[0]], stream=False)
@@ -75,3 +77,4 @@ def whatsapp_reply():
 if __name__ == "__main__":
 
     app.run(port=5000, debug=True)
+
