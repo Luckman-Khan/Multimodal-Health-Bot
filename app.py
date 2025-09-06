@@ -34,7 +34,7 @@ def whatsapp_reply():
     try:
         # --- Image (Multimodal) Logic ---
         if media_url:
-            model = genai.GenerativeModel('gemini-1.0-pro-vision')
+            model = genai.GenerativeModel('gemini-1.5-flash-latest')
             image_response = requests.get(media_url)
             image_data = image_response.content
             image_parts = [{"mime_type": "image/jpeg", "data": image_data}]
@@ -51,7 +51,7 @@ def whatsapp_reply():
 
         # --- Text Logic ---
         else:
-            model = genai.GenerativeModel('gemini-1.0-pro')
+            model = genai.GenerativeModel('gemini-1.5-flash-latest')
             prompt = f"""
             Answer the user's question based ONLY on the following information:
             ---
@@ -73,4 +73,5 @@ def whatsapp_reply():
 
 
 if __name__ == "__main__":
+
     app.run(port=5000, debug=True)
