@@ -1,0 +1,19 @@
+# Python virtual environment
+venv/
+env/
+__pycache__/
+
+# Compiled Python files
+*.pyc
+
+# IDE/Editor specific files
+.vscode/
+.idea/
+
+# Secret environment variables file
+# --- THIS IS THE MOST IMPORTANT LINE ---
+.env
+
+# OS-specific files
+.DS_Store
+Thumbs.db
