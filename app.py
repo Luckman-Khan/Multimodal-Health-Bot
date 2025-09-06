@@ -47,11 +47,17 @@ def whatsapp_reply():
                 image_data = image_response.content
                 image_parts = [{"mime_type": mime_type, "data": image_data}]
 
+        
                 prompt = """
-                You are a helpful AI health assistant.
-                IMPORTANT: Start your response with this exact disclaimer in bold: '*I am an AI assistant, not a doctor. Please consult a healthcare professional for medical advice.*'
-                Describe what you see in simple terms. DO NOT give a diagnosis.
-                """
+            You are a helpful AI health information assistant. Analyze this image.
+            IMPORTANT: Start your response with this exact disclaimer in bold: '*I am an AI assistant, not a doctor. Please consult a healthcare professional for specific medical advice.*'
+            If the image is of a medicine or prescription:
+            1. Identify the name of the medicine if it is clearly visible.
+            2. State its general purpose (e.g., "Paracetamol is a common medicine used to treat pain and fever").
+            3. DO NOT suggest a dosage, frequency, or how to take it.
+            4. End your response by strongly advising the user to follow their doctor's exact prescription or consult a pharmacist for instructions.
+            """
+            
 
                 response = model.generate_content([prompt, image_parts[0]], stream=False)
                 response.resolve()
@@ -83,4 +89,5 @@ def whatsapp_reply():
 
 
 if __name__ == "__main__":
+
     app.run(port=5000, debug=True)
