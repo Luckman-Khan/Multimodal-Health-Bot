@@ -1,43 +1,76 @@
 import os
+import requests
 import google.generativeai as genai
 from flask import Flask, request
 from twilio.twiml.messaging_response import MessagingResponse
+from dotenv import load_dotenv
+
+# Load environment variables from .env file for local testing
+load_dotenv()
 
 app = Flask(__name__)
 
-# Load your knowledge base
-with open('knowledge.txt', 'r') as f:
-    knowledge_base = f.read()
-
-# Configure Gemini API
-# It's better to set this as an environment variable in Render
-GEMINI_API_KEY = "YOUR_API_KEY_HERE"
+# --- Configuration ---
+# This is the correct way to get the API key from the environment
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 genai.configure(api_key=GEMINI_API_KEY)
-model = genai.GenerativeModel('gemini-pro')
+
+# Load your custom knowledge base from a file
+try:
+    with open('knowledge.txt', 'r', encoding='utf-8') as f:
+        knowledge_base = f.read()
+except FileNotFoundError:
+    knowledge_base = "No knowledge base file found."
+
 
 @app.route("/whatsapp", methods=['POST'])
 def whatsapp_reply():
     incoming_msg = request.values.get('Body', '').lower()
+    media_url = request.values.get('MediaUrl0')
+
     resp = MessagingResponse()
     msg = resp.message()
 
-    # Create the prompt for Gemini
-    prompt = f"""
-    You are a simple, friendly AI health assistant for people in rural India.
-    Answer the user's question based ONLY on the following information:
-    ---
-    {knowledge_base}
-    ---
-    User's question: "{incoming_msg}"
-    Keep your answer short, in simple language, and use bullet points or lists if possible.
-    If the question is not in the information, say 'I can only answer questions about topics in my knowledge base.'
-    """
+    try:
+        # --- Image (Multimodal) Logic ---
+        if media_url:
+            model = genai.GenerativeModel('gemini-pro-vision')
+            image_response = requests.get(media_url)
+            image_data = image_response.content
+            image_parts = [{"mime_type": "image/jpeg", "data": image_data}]
 
-    # Get the response from Gemini
-    response = model.generate_content(prompt)
-    msg.body(response.text)
+            prompt = """
+            You are a helpful AI health assistant.
+            IMPORTANT: Start your response with this exact disclaimer in bold: '*I am an AI assistant, not a doctor. Please consult a healthcare professional for medical advice.*'
+            Describe what you see in simple terms. DO NOT give a diagnosis.
+            """
+            
+            response = model.generate_content([prompt, image_parts[0]], stream=False)
+            response.resolve()
+            msg.body(response.text)
+
+        # --- Text Logic ---
+        else:
+            model = genai.GenerativeModel('gemini-pro')
+            prompt = f"""
+            Answer the user's question based ONLY on the following information:
+            ---
+            {knowledge_base}
+            ---
+            User's question: "{incoming_msg}"
+            If the question is not in the information, say 'I can only answer questions about topics in my knowledge base.'
+            """
+            
+            response = model.generate_content(prompt)
+            msg.body(response.text)
+
+    except Exception as e:
+        error_message = "Sorry, I encountered an error. Please try again later."
+        print(f"An error occurred: {e}")
+        msg.body(error_message)
 
     return str(resp)
 
+
 if __name__ == "__main__":
-    app.run(port=5000)
+    app.run(port=5000, debug=True)
