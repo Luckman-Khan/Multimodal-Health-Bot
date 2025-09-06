@@ -10,8 +10,11 @@ load_dotenv()
 
 app = Flask(__name__)
 
-# Configure Gemini API
+# --- Configuration ---
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+TWILIO_ACCOUNT_SID = os.getenv("TWILIO_ACCOUNT_SID")
+TWILIO_AUTH_TOKEN = os.getenv("TWILIO_AUTH_TOKEN")
+
 genai.configure(api_key=GEMINI_API_KEY)
 
 # Load custom knowledge base
@@ -33,13 +36,14 @@ def whatsapp_reply():
     try:
         # --- Image (Multimodal) Logic ---
         if media_url:
-            model = genai.GenerativeModel('gemini-1.5-flash-latest')
-            image_response = requests.get(media_url)
+            # UPDATED: Use Twilio credentials to securely download the image
+            image_response = requests.get(media_url, auth=(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN))
             
             mime_type = image_response.headers.get('Content-Type')
-            print(f"Debug: Detected MIME Type is:{mime_type}")
+            print(f"DEBUG: Detected MIME Type is: {mime_type}") # We can leave this for now
             
             if mime_type and mime_type.startswith('image/'):
+                model = genai.GenerativeModel('gemini-1.5-flash-latest')
                 image_data = image_response.content
                 image_parts = [{"mime_type": mime_type, "data": image_data}]
 
@@ -53,7 +57,7 @@ def whatsapp_reply():
                 response.resolve()
                 msg.body(response.text)
             else:
-                msg.body("Sorry, I could not process the image file. Please send a standard image format like JPEG or PNG.")
+                msg.body("Sorry, I could not process the image file. Twilio returned a non-image file type.")
 
         # --- Text Logic ---
         else:
@@ -79,5 +83,4 @@ def whatsapp_reply():
 
 
 if __name__ == "__main__":
-
     app.run(port=5000, debug=True)
