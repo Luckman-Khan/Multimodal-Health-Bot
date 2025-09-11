@@ -138,3 +138,8 @@ Topic: Rabies (Animal Bite Care)
 Symptoms: Not applicable for first aid. The focus is on preventing the disease after a bite.
 First Aid: Immediately wash the wound with soap and running water for at least 15 minutes. After washing, apply an antiseptic.
 When to see a doctor: Immediately after being bitten or scratched by any animal, especially a dog, cat, or monkey. A doctor will decide if you need anti-rabies injections.
+
+Topic: COVID-19 (Coronavirus)
+Symptoms: The most common symptoms are fever, a dry cough, and tiredness. Other symptoms can include a loss of taste or smell, sore throat, headache, and body aches.
+Prevention: The best ways to prevent infection are to wash your hands frequently with soap and water, wear a well-fitting mask in crowded areas, maintain a safe distance from others, and keep rooms well-ventilated. Getting vaccinated is highly effective at preventing severe disease.
+When to see a doctor: You should get tested and consult a doctor if you have symptoms. Seek immediate medical attention if you experience serious symptoms like difficulty breathing or shortness of breath, chest pain or pressure, or confusion.
