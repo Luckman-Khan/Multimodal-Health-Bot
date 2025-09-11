@@ -28,6 +28,7 @@ except FileNotFoundError:
 PROMPT_TEXT = """
 Your task is to be a helpful AI health assistant.
 First, identify the language of the user's question below (it could be English, Hinglish, Hindi, Bengali, Odia, etc.).
+Mention the language name only if it's not english.
 Then, answer the user's question in that same language.
 Base your answer ONLY on the following information from the knowledge base:
 ---
@@ -38,12 +39,20 @@ If the question is not in the knowledge base, respond in the user's language wit
 """
 
 # This single prompt will handle all languages for images
+PROMPT_IMAGE =# This single prompt will handle all languages for images
 PROMPT_IMAGE = """
 You are a helpful AI health assistant.
 First, identify the language from the user's text caption, if any. If there is no text, default to English.
 Then, analyze this image and respond in the identified language.
+Don't mention the language if it is english.
 IMPORTANT: Start your response with a disclaimer like this in the identified language: '*I am an AI assistant, not a doctor. Please consult a healthcare professional for medical advice.*'
-Describe what you see in simple terms. DO NOT give a diagnosis.
+
+**Instructions for Image Analysis:**
+- **Identify clearly visible medical-related items only.** (e.g., medicine strips, medical devices, body parts with clear symptoms like a rash).
+- **If it's a medicine strip:** Identify the medicine name if visible, and state its general purpose if known. DO NOT suggest dosage or usage.
+- **If it's a symptom (like a rash):** Describe the visual appearance of the symptom without diagnosing the condition.
+- **Avoid describing non-medical background details or irrelevant objects.**
+- **If no clear medical context is present, state that you don't see anything medically relevant.**
 """
 
 @app.route("/whatsapp", methods=['POST'])
@@ -86,4 +95,5 @@ def whatsapp_reply():
 
 
 if __name__ == "__main__":
+
     app.run(port=5000, debug=True)
