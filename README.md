@@ -46,6 +46,8 @@ Access to clear, simple, and timely healthcare information is a significant chal
 4.  **Set up environment variables:**
     -   Create a `.env` file by copying the `env.example`.
     -   Add your `GEMINI_API_KEY` to the `.env` file.
+    -   Add your `TWILIO_ACCOUNT_SID` to the `.env` file.
+    -   Add your `TWILIO_AUTH_TOKEN` to the `.env` file.
 
 5.  **Run the application:**
     ```bash
