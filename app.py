@@ -4,6 +4,7 @@ import google.generativeai as genai
 from flask import Flask, request
 from twilio.twiml.messaging_response import MessagingResponse
 from dotenv import load_dotenv
+from langdetect import detect
 
 # Load environment variables
 load_dotenv()
@@ -27,7 +28,6 @@ except FileNotFoundError:
 
 @app.route("/whatsapp", methods=['POST'])
 # Make sure you have this import at the top of your file
-from langdetect import detect
 
 @app.route("/whatsapp", methods=['POST'])
 def whatsapp_reply():
@@ -117,3 +117,4 @@ def whatsapp_reply():
 if __name__ == "__main__":
 
     app.run(port=5000, debug=True)
+
