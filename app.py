@@ -25,14 +25,6 @@ try:
 except FileNotFoundError:
     knowledge_base = "No knowledge base file found."
 
-
-@app.route("/whatsapp", methods=['POST'])
-# Make sure you have this import at the top of your file
-<<<<<<< HEAD
-
-=======
->>>>>>> 8be0a16e205b80f15c26d04750a31b122acf58b4
-
 @app.route("/whatsapp", methods=['POST'])
 def whatsapp_reply():
     incoming_msg = request.values.get('Body', '') # Get the message text/caption
@@ -148,4 +140,5 @@ def whatsapp_reply():
 if __name__ == "__main__":
 
     app.run(port=5000, debug=True)
+
 
