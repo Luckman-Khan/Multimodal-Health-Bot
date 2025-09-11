@@ -68,15 +68,28 @@ def whatsapp_reply():
         # --- Text Logic ---
         else:
             model = genai.GenerativeModel('gemini-1.5-flash-latest')
-            prompt = f"""
-            Answer the user's question based ONLY on the following information:
-            ---
-            {knowledge_base}
-            ---
-            User's question: "{incoming_msg}"
-            If the question is not in the information, say:
-            'I can only answer questions about topics in my knowledge base.'
-            """
+           
+
+            prompts = {
+                'en': f"""
+                You are a friendly health assistant. The user might be writing in English or Hinglish (Hindi written in the Roman alphabet).
+                Answer the user's question in the same language and script they used (English or Hinglish).
+                Base your answer ONLY on the following information from the knowledge base:
+                ---
+                {knowledge_base}
+                ---
+                User's question: "{incoming_msg}"
+                If the question is not in the knowledge base, respond in the user's language: 'I can only answer questions about topics in my knowledge base.'
+                """,
+                'hi': f"""
+                केवल निम्नलिखित जानकारी के आधार पर उपयोगकर्ता के प्रश्न का उत्तर हिंदी में दें:
+                ---
+                {knowledge_base}
+                ---
+                उपयोगकर्ता का प्रश्न: "{incoming_msg}"
+                यदि प्रश्न जानकारी में नहीं है, तो हिंदी में कहें: 'मैं केवल अपने ज्ञानकोष में मौजूद विषयों के बारे में ही प्रश्नों का उत्तर दे सकता हूं।'
+                """
+            }
 
             response = model.generate_content(prompt)
             msg.body(response.text)
