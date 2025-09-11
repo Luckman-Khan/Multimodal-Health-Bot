@@ -39,7 +39,6 @@ If the question is not in the knowledge base, respond in the user's language wit
 """
 
 # This single prompt will handle all languages for images
-PROMPT_IMAGE =# This single prompt will handle all languages for images
 PROMPT_IMAGE = """
 You are a helpful AI health assistant.
 First, identify the language from the user's text caption, if any. If there is no text, default to English.
@@ -97,3 +96,4 @@ def whatsapp_reply():
 if __name__ == "__main__":
 
     app.run(port=5000, debug=True)
+
