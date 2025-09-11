@@ -26,51 +26,61 @@ except FileNotFoundError:
 
 
 @app.route("/whatsapp", methods=['POST'])
+# Make sure you have this import at the top of your file
+from langdetect import detect
+
+@app.route("/whatsapp", methods=['POST'])
 def whatsapp_reply():
-    incoming_msg = request.values.get('Body', '').lower()
+    incoming_msg = request.values.get('Body', '') # Get the message text/caption
     media_url = request.values.get('MediaUrl0')
 
     resp = MessagingResponse()
     msg = resp.message()
 
+    # --- NEW: Detect language at the beginning ---
+    # We detect the language from the text, whether it's a caption or a standalone message.
+    try:
+        # We use the original incoming_msg before converting to lower() for better detection
+        lang = detect(incoming_msg) if incoming_msg else 'en'
+    except:
+        lang = 'en' # Default to English if detection fails or message is empty
+
     try:
         # --- Image (Multimodal) Logic ---
         if media_url:
-            # UPDATED: Use Twilio credentials to securely download the image
-            image_response = requests.get(media_url, auth=(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN))
+            # NEW: Prompts for image analysis in different languages
+            prompts_image = {
+                'en': """
+                You are a helpful AI health assistant. Analyze this image.
+                IMPORTANT: Start your response in English with this exact disclaimer in bold: '*I am an AI assistant, not a doctor. Please consult a healthcare professional for medical advice.*'
+                Describe what you see in simple terms. DO NOT give a diagnosis.
+                """,
+                'hi': """
+                आप एक सहायक एआई स्वास्थ्य सहायक हैं। इस छवि का विश्लेषण करें।
+                महत्वपूर्ण: अपनी प्रतिक्रिया हिंदी में इस सटीक अस्वीकरण के साथ बोल्ड में शुरू करें: '*मैं एक एआई सहायक हूं, डॉक्टर नहीं। कृपया चिकित्सीय सलाह के लिए एक स्वास्थ्य देखभाल पेशेवर से परामर्श लें।*'
+                सरल शब्दों में बताएं कि आप क्या देखते हैं। निदान न करें।
+                """
+            }
+            # Select the correct prompt, defaulting to English
+            prompt = prompts_image.get(lang, prompts_image['en'])
             
+            model = genai.GenerativeModel('gemini-1.5-flash-latest')
+            image_response = requests.get(media_url, auth=(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN))
             mime_type = image_response.headers.get('Content-Type')
-            print(f"DEBUG: Detected MIME Type is: {mime_type}") # We can leave this for now
             
             if mime_type and mime_type.startswith('image/'):
-                model = genai.GenerativeModel('gemini-1.5-flash-latest')
                 image_data = image_response.content
                 image_parts = [{"mime_type": mime_type, "data": image_data}]
-
-        
-                prompt = """
-            You are a helpful AI health information assistant. Analyze this image.
-            IMPORTANT: Start your response with this exact disclaimer in bold: '*I am an AI assistant, not a doctor. Please consult a healthcare professional for specific medical advice.*'
-            If the image is of a medicine or prescription:
-            1. Identify the name of the medicine if it is clearly visible.
-            2. State its general purpose (e.g., "Paracetamol is a common medicine used to treat pain and fever").
-            3. DO NOT suggest a dosage, frequency, or how to take it.
-            4. End your response by strongly advising the user to follow their doctor's exact prescription or consult a pharmacist for instructions.
-            """
-            
-
                 response = model.generate_content([prompt, image_parts[0]], stream=False)
                 response.resolve()
                 msg.body(response.text)
             else:
-                msg.body("Sorry, I could not process the image file. Twilio returned a non-image file type.")
+                msg.body("Sorry, I could not process the image file.")
 
         # --- Text Logic ---
         else:
-            model = genai.GenerativeModel('gemini-1.5-flash-latest')
-           
-
-            prompts = {
+            # Prompts for text analysis (as defined before)
+            prompts_text = {
                 'en': f"""
                 You are a friendly health assistant. The user might be writing in English or Hinglish (Hindi written in the Roman alphabet).
                 Answer the user's question in the same language and script they used (English or Hinglish).
@@ -90,7 +100,11 @@ def whatsapp_reply():
                 यदि प्रश्न जानकारी में नहीं है, तो हिंदी में कहें: 'मैं केवल अपने ज्ञानकोष में मौजूद विषयों के बारे में ही प्रश्नों का उत्तर दे सकता हूं।'
                 """
             }
-
+            
+            # Select the correct prompt, defaulting to English
+            prompt = prompts_text.get(lang, prompts_text['en'])
+            
+            model = genai.GenerativeModel('gemini-1.5-flash-latest')
             response = model.generate_content(prompt)
             msg.body(response.text)
 
@@ -99,7 +113,6 @@ def whatsapp_reply():
         msg.body("Sorry, I encountered an error. Please try again later.")
 
     return str(resp)
-
 
 if __name__ == "__main__":
 
