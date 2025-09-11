@@ -14,3 +14,127 @@ Topic: Child Vaccination Schedule
 - At 14 weeks: Pentavalent 3, OPV 3, Rotavirus 3, PCV 2
 - At 9 months: Measles-Rubella (MR 1), PCV Booster
 - At 16-24 months: DPT Booster 1, OPV Booster, MR 2
+
+Topic: Common Cold
+Symptoms: Runny or stuffy nose, sneezing, sore throat, mild cough.
+Home Remedy: Get plenty of rest. Drink lots of warm fluids like water, soup, or tea. Gargle with warm salt water for a sore throat.
+When to see a doctor: If you have a high fever, difficulty breathing, or symptoms do not improve after 10 days.
+
+Topic: Headache (General)
+Symptoms: Mild to moderate pain or a feeling of pressure in the head or neck.
+Home Remedy: Rest in a quiet, dark room. Drink a full glass of water. Apply a cool, damp cloth to your forehead.
+When to see a doctor: If it is the worst headache of your life, or if it comes with a high fever, stiff neck, confusion, or happens after a head injury.
+
+Topic: Fever
+Symptoms: Body temperature is higher than normal, feeling hot, sweating or shivering.
+Home Remedy: Rest as much as possible. Drink plenty of fluids like water, juices, or soup to prevent dehydration. Wear light clothing.
+When to see a doctor: For a very high fever (above 103°F or 39.4°C), if a fever lasts for more than 3 days, or if it comes with a severe headache, skin rash, or difficulty breathing.
+
+Topic: Minor Cuts and Scrapes
+First Aid: First, wash your hands with soap. Gently clean the wound with clean water. Apply gentle pressure with a clean cloth to stop any bleeding. Apply an antiseptic cream and cover with a clean bandage.
+When to see a doctor: If the cut is deep, the bleeding doesn't stop after 10 minutes of pressure, or it was caused by a dirty or rusty object.
+
+Topic: Minor Burns (like a sunburn)
+Symptoms: Red, painful skin without blisters.
+First Aid: Immediately place the burn under cool (not cold) running water for about 10-15 minutes. After cooling, you can apply aloe vera gel. Do not apply ice, butter, or oil.
+When to see a doctor: If the burn is large (bigger than your palm), on the face, hands, or feet, or if it has blisters.
+
+Topic: Malaria
+Symptoms: High fever with chills and shivering, headache, nausea, muscle pain, and tiredness. The fever often comes in cycles.
+First Aid: A person with these symptoms must see a doctor immediately for a blood test. While waiting, they should rest and drink fluids.
+When to see a doctor: Immediately. Malaria is serious and requires specific medicine prescribed by a doctor.
+
+Topic: Dengue Fever
+Symptoms: Sudden high fever, severe headache, pain behind the eyes, severe joint and muscle pain, skin rash.
+First Aid: Rest and drink plenty of fluids like water and juice. A doctor may suggest paracetamol for fever but AVOID aspirin or ibuprofen.
+When to see a doctor: Immediately if you suspect Dengue. Go to the emergency room if there is severe stomach pain, vomiting blood, or bleeding from the nose or gums.
+
+Topic: Chikungunya
+Symptoms: High fever and severe joint pain, especially in the hands and feet. Headache, muscle pain, and rash can also occur.
+First Aid: Rest the painful joints. Use cold packs to reduce swelling. A doctor may recommend pain relievers.
+When to see a doctor: If you have a high fever with severe joint pain.
+
+Topic: Typhoid
+Symptoms: High fever that increases daily, headache, weakness, stomach pain, and either constipation or diarrhea. Sometimes a rash of flat, rose-colored spots appears.
+First Aid: This requires medical treatment. A person with these symptoms should see a doctor. It is important to drink plenty of boiled or purified water.
+When to see a doctor: Immediately. Typhoid needs to be treated with antibiotics prescribed by a doctor.
+
+Topic: Cholera
+Symptoms: Severe watery diarrhea (like rice-water), vomiting, and leg cramps. It can cause dehydration very quickly.
+First Aid: The most important thing is to rehydrate. Give ORS (Oral Rehydration Solution) immediately and continuously.
+When to see a doctor: Immediately. Cholera is a medical emergency due to rapid dehydration.
+
+Topic: Jaundice (Hepatitis A)
+Symptoms: Yellowing of the skin and whites of the eyes, dark yellow urine, tiredness, fever, stomach pain, and nausea.
+First Aid: This condition needs a doctor's diagnosis. The person should rest completely and eat simple, non-oily food. Drink plenty of clean water.
+When to see a doctor: As soon as you notice yellowing of the skin or eyes.
+
+Topic: Pneumonia
+Symptoms: Cough (may produce phlegm), fever, chills, and difficulty breathing or shortness of breath.
+First Aid: This is a serious infection. A doctor's consultation is necessary. The person should rest and drink warm fluids.
+When to see a doctor: Immediately, especially if there is chest pain or difficulty breathing.
+
+Topic: Bronchitis
+Symptoms: A persistent cough that brings up mucus, wheezing, shortness of breath, and chest tightness.
+First Aid: Rest, drink plenty of fluids, and use a humidifier or inhale steam to help loosen mucus.
+When to see a doctor: If your cough is severe, lasts more than 3 weeks, or you have a fever or cough up blood.
+
+Topic: Chickenpox
+Symptoms: An itchy rash of small, fluid-filled blisters, fever, tiredness, and headache.
+First Aid: To relieve itching, take cool baths with added baking soda or uncooked oatmeal. Keep fingernails short to avoid scratching.
+When to see a doctor: If the rash spreads to the eyes, or if there is a very high fever, dizziness, or shortness of breath.
+
+Topic: Measles
+Symptoms: High fever, cough, runny nose, and red, watery eyes, followed by a rash of tiny red spots that starts on the head and spreads to the rest of the body.
+First Aid: This is a highly contagious disease and needs a doctor's care. Keep the person isolated. Encourage rest and fluids.
+When to see a doctor: As soon as you suspect measles. It is a serious illness.
+
+Topic: Mumps
+Symptoms: Swollen and painful salivary glands under the ears (puffy cheeks), fever, headache, and tiredness.
+First Aid: Rest, apply a warm or cool compress to the swollen area, and eat soft foods that don't require much chewing.
+When to see a doctor: As soon as you notice the swelling.
+
+Topic: Conjunctivitis (Pink Eye)
+Symptoms: Redness in the white of the eye, itching, gritty feeling, and a discharge that forms a crust during the night.
+Home Remedy: Clean the eyes with a clean, damp cloth. Do not touch your eyes and wash your hands frequently to avoid spreading it.
+When to see a doctor: If there is eye pain, blurred vision, or symptoms do not improve after a few days.
+
+Topic: Urinary Tract Infection (UTI)
+Symptoms: A strong urge to urinate, a burning feeling when urinating, passing frequent, small amounts of urine, and cloudy or strong-smelling urine.
+Home Remedy: Drink plenty of water to help flush out bacteria.
+When to see a doctor: As soon as you have symptoms. UTIs require antibiotics from a doctor to be cured.
+
+Topic: Ringworm
+Symptoms: A red, circular, itchy rash with clearer skin in the middle. It can appear anywhere on the body.
+Home Remedy: Keep the affected area clean and dry. Over-the-counter antifungal creams are available.
+When to see a doctor: If the rash doesn't improve with home treatment or if it's on the scalp.
+
+Topic: Anemia (Iron-Deficiency)
+Symptoms: Feeling very tired and weak, pale skin, shortness of breath, and dizziness.
+Management Advice: This condition needs a doctor's diagnosis. A doctor may recommend eating iron-rich foods like spinach, lentils, and beans, and may prescribe iron supplements.
+When to see a doctor: If you constantly feel tired and weak for no reason.
+
+Topic: Food Poisoning
+Symptoms: Nausea, vomiting, watery diarrhea, and stomach cramps, usually starting a few hours after eating contaminated food.
+First Aid: The most important thing is to stay hydrated. Sip small amounts of water or ORS. Avoid solid food until vomiting stops.
+When to see a doctor: If there is high fever, blood in vomit or stools, or signs of severe dehydration (like not urinating).
+
+Topic: Heat Stroke
+Symptoms: High body temperature (104°F or 40°C or higher), confusion, altered speech, hot and dry skin, and rapid pulse. This is an emergency.
+First Aid: Call for emergency help immediately. Move the person to a cooler place. Help lower their temperature with cool cloths or a cool bath.
+When to see a doctor: Immediately. Heat stroke is a life-threatening emergency.
+
+Topic: High Blood Pressure (Hypertension)
+Symptoms: Often has no symptoms. Sometimes can cause headaches or shortness of breath. The only way to know is to get it checked.
+Management Advice: This is a serious condition that must be managed by a doctor. General advice includes reducing salt intake, regular exercise, eating a healthy diet, and taking prescribed medicine regularly.
+When to see a doctor: All adults should get their blood pressure checked regularly.
+
+Topic: Diabetes (Type 2)
+Symptoms: Increased thirst, frequent urination, increased hunger, and tiredness.
+Management Advice: Diabetes must be managed by a doctor. General advice includes controlling your diet, regular exercise, monitoring blood sugar, and taking prescribed medicines or insulin.
+When to see a doctor: If you have symptoms of diabetes. It is a lifelong condition that requires medical care.
+
+Topic: Rabies (Animal Bite Care)
+Symptoms: Not applicable for first aid. The focus is on preventing the disease after a bite.
+First Aid: Immediately wash the wound with soap and running water for at least 15 minutes. After washing, apply an antiseptic.
+When to see a doctor: Immediately after being bitten or scratched by any animal, especially a dog, cat, or monkey. A doctor will decide if you need anti-rabies injections.
