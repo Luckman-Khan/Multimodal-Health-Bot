@@ -4,4 +4,3 @@ google-generativeai
 requests
 python-dotenv
 gunicorn
-langdetect
