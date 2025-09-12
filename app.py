@@ -25,12 +25,19 @@ except FileNotFoundError:
 
 # --- Universal Prompts ---
 # This single prompt will handle all languages for text
-PROMPT_TEXT = """
-Your task is to be a helpful AI health assistant.
-First, identify the language of the user's question below (it could be English, Hinglish, Hindi, Bengali, Odia, etc.).
-Mention the language name only if it's not english.
-Then, answer the user's question in that same language.
-Base your answer ONLY on the following information from the knowledge base:
+
+PROMPT_IMAGE = """
+You are a helpful AI health assistant. Your task is to analyze an image and respond.
+
+**Language Control Rules:**
+1.  Check for a text caption from the user. If a caption exists, YOU MUST respond in the same language as the caption.
+2.  If there is NO text caption, YOU MUST respond in English. Do not use any other language.
+
+**Response Instructions:**
+- Start your response with a disclaimer like this in the chosen language: '*I am an AI assistant, not a doctor. Please consult a healthcare professional for medical advice.*'
+- Describe what you see in simple terms. DO NOT give a diagnosis.
+- Focus only on medically relevant items in the image.
+"""
 ---
 {knowledge_base}
 ---
@@ -95,5 +102,6 @@ def whatsapp_reply():
 if __name__ == "__main__":
 
     app.run(port=5000, debug=True)
+
 
 
