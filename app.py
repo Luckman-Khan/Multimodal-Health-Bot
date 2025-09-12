@@ -43,7 +43,6 @@ PROMPT_IMAGE = """
 You are a helpful AI health assistant.
 First, identify the language from the user's text caption, if any. If there is no text, default to English.
 Then, analyze this image and respond in the identified language.
-Don't mention the language if it is english.
 IMPORTANT: Start your response with a disclaimer like this in the identified language: '*I am an AI assistant, not a doctor. Please consult a healthcare professional for medical advice.*'
 
 **Instructions for Image Analysis:**
@@ -96,4 +95,5 @@ def whatsapp_reply():
 if __name__ == "__main__":
 
     app.run(port=5000, debug=True)
+
 
