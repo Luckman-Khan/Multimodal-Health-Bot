@@ -5,6 +5,20 @@ from flask import Flask, request
 from twilio.twiml.messaging_response import MessagingResponse
 from dotenv import load_dotenv
 import json
+import firebase_admin
+from firebase_admin import credentials, firestore
+
+# --- Firebase Initialization ---
+# IMPORTANT: You need to download your Firebase service account key and save it as 'serviceAccountKey.json'
+# This file MUST be added to your .gitignore file to keep it secure.
+try:
+    cred = credentials.Certificate("serviceAccountKey.json")
+    firebase_admin.initialize_app(cred)
+    db = firestore.client()
+    print("Firebase connected successfully.")
+except Exception as e:
+    print(f"Firebase connection failed: {e}")
+    db = None
 
 # Load environment variables
 load_dotenv()
@@ -68,27 +82,50 @@ You are a medical information assistant. Your task is to analyze the user-provid
 def whatsapp_reply():
     incoming_msg = request.values.get('Body', '')
     media_url = request.values.get('MediaUrl0')
+    # Get the user's phone number, which will be our unique ID
+    user_phone_number = request.values.get('From') 
 
     resp = MessagingResponse()
     msg = resp.message()
     
-    # Clean the incoming message for keyword checks
     clean_msg = incoming_msg.strip().lower()
 
     try:
         # --- Keyword Logic ---
         if clean_msg == 'alert':
-            if outbreak_data["alerts"]:
-                alert = outbreak_data["alerts"][0]
-                alert_message = f"{alert['message_en']}\n\n{alert['message_hi']}\n\n{alert['message_bn']}\n\n{alert['message_or']}"
-                msg.body(alert_message)
+            user_ref = db.collection('users').document(user_phone_number).get()
+            if user_ref.exists:
+                user_district = user_ref.to_dict().get('district', '').lower()
+                alert_found = False
+                for alert in outbreak_data["alerts"]:
+                    if alert['district'].lower() == user_district:
+                        alert_message = f"{alert['message_en']}\n\n{alert['message_hi']}\n\n{alert['message_bn']}\n\n{alert['message_or']}"
+                        msg.body(alert_message)
+                        alert_found = True
+                        break
+                if not alert_found:
+                    msg.body("There are no new health alerts for your registered district.")
             else:
-                msg.body("There are no new health alerts in your area.")
+                msg.body("Please set your district first to receive local alerts. Send: `set district [Your District Name]`")
             return str(resp)
         
-        # NEW: Handle district update requests
         elif 'update district' in clean_msg or 'change district' in clean_msg:
-            msg.body("To update your location for health alerts, please reply with the name of your new district.")
+            msg.body("To set or update your location, please send a message in this format:\n\n`set district [Your District Name]`\n\nFor example: `set district Murshidabad`")
+            return str(resp)
+
+        elif clean_msg.startswith('set district'):
+            parts = incoming_msg.strip().split()
+            if len(parts) > 2:
+                district_name = " ".join(parts[2:])
+                # Save the user's district to Firestore
+                if db:
+                    user_ref = db.collection('users').document(user_phone_number)
+                    user_ref.set({'district': district_name})
+                    msg.body(f"Thank you! Your district has been set to: {district_name}")
+                else:
+                    msg.body("Database connection is not available. Could not save your district.")
+            else:
+                msg.body("Please provide a district name after 'set district'. For example: `set district Murshidabad`")
             return str(resp)
 
         # --- AI Processing Logic ---
