@@ -54,14 +54,14 @@ RESPONSES = {
         'no_district_for_alert': "Please set your district first. Send: `set district [Your District Name]`",
         'no_alert_found': "There are no new health alerts for your registered district: {district_name}",
         'update_district_prompt': "To set or update your location, send a message in this format:\n`set district [Your District Name]`",
-        'provide_district_name': "Please provide a district name. Example: `set district Murshidabad`",
+        'provide_district_name': "Incorrect format. Please provide a district name.\nExample: `set district Murshidabad`",
         'db_connection_error': "Database connection is not available.",
         'feedback_success': "Thank you for your feedback!",
-        'feedback_prompt': "Please provide your feedback after the word 'feedback'.",
+        'feedback_prompt': "Incorrect format. Please provide your feedback after the word 'feedback'.\nExample: `feedback This bot is helpful.`",
         'error_message': "Sorry, I encountered an error. Please try again later.",
         'image_error': "Sorry, I could not process the image file.",
-        'vaccine_prompt': "To get a personalized child vaccination schedule, please provide the date of birth in this format:\n`schedule dob DD-MM-YYYY`",
-        'dob_error': "Could not understand the date. Please use DD-MM-YYYY format, for example: `schedule dob 25-12-2024`",
+        'vaccine_prompt': "To get a personalized child vaccination schedule, please provide the date of birth in this format: DD-MM-YYYY",
+        'dob_error': "Incorrect format. Please use DD-MM-YYYY format, for example: `25-12-2024`",
         'schedule_saved': "Here is the upcoming vaccination schedule for your child. I will also send you a reminder before each due date."
     },
     'hi': {
@@ -69,14 +69,14 @@ RESPONSES = {
         'no_district_for_alert': "कृपया पहले अपना जिला सेट करें। भेजें: `set district [आपके जिले का नाम]`",
         'no_alert_found': "आपके पंजीकृत जिले {district_name} के लिए कोई नया स्वास्थ्य अलर्ट नहीं है।",
         'update_district_prompt': "अपना स्थान सेट या अपडेट करने के लिए, इस प्रारूप में एक संदेश भेजें:\n`set district [आपके जिले का नाम]`",
-        'provide_district_name': "कृपया एक जिले का नाम प्रदान करें। उदाहरण: `set district Murshidabad`",
+        'provide_district_name': "गलत प्रारूप। कृपया एक जिले का नाम प्रदान करें।\nउदाहरण: `set district Murshidabad`",
         'db_connection_error': "डेटाबेस कनेक्शन उपलब्ध नहीं है।",
         'feedback_success': "आपकी प्रतिक्रिया के लिए धन्यवाद!",
-        'feedback_prompt': "'फीडबैक' शब्द के बाद कृपया अपनी प्रतिक्रिया प्रदान करें।",
+        'feedback_prompt': "गलत प्रारूप। 'फीडबैक' शब्द के बाद कृपया अपनी प्रतिक्रिया प्रदान करें।\nउदाहरण: `feedback यह बॉट बहुत मददगार है।`",
         'error_message': "क्षमा करें, मुझे एक त्रुटि का सामना करना पड़ा।",
         'image_error': "क्षमा करें, मैं छवि फ़ाइल को संसाधित नहीं कर सका।",
-        'vaccine_prompt': "बच्चे का व्यक्तिगत टीकाकरण कार्यक्रम प्राप्त करने के लिए, कृपया इस प्रारूप में जन्म तिथि प्रदान करें:\n`schedule dob DD-MM-YYYY`",
-        'dob_error': "तारीख समझ में नहीं आई। कृपया DD-MM-YYYY प्रारूप का उपयोग करें, उदाहरण के लिए: `schedule dob 25-12-2024`",
+        'vaccine_prompt': "बच्चे का व्यक्तिगत टीकाकरण कार्यक्रम प्राप्त करने के लिए, कृपया इस प्रारूप में जन्म तिथि प्रदान करें: DD-MM-YYYY",
+        'dob_error': "गलत प्रारूप। कृपया DD-MM-YYYY प्रारूप का उपयोग करें, उदाहरण के लिए: `25-12-2024`",
         'schedule_saved': "यहाँ आपके बच्चे का आगामी टीकाकरण कार्यक्रम है। मैं आपको प्रत्येक नियत तारीख से पहले एक अनुस्मारक भी भेजूंगा।"
     },
     'bn': {
@@ -84,15 +84,30 @@ RESPONSES = {
         'no_district_for_alert': "অনুগ্রহ করে প্রথমে আপনার জেলা সেট করুন। পাঠান: `set district [আপনার জেলার নাম]`",
         'no_alert_found': "আপনার নিবন্ধিত জেলা {district_name} এর জন্য কোন নতুন স্বাস্থ্য সতর্কতা নেই।",
         'update_district_prompt': "আপনার অবস্থান সেট বা আপডেট করতে, এই ফর্ম্যাটে একটি বার্তা পাঠান:\n`set district [আপনার জেলার নাম]`",
-        'provide_district_name': "অনুগ্রহ করে একটি জেলার নাম দিন। উদাহরণ: `set district Murshidabad`",
+        'provide_district_name': "ভুল ফর্ম্যাট। অনুগ্রহ করে একটি জেলার নাম দিন।\nউদাহরণ: `set district Murshidabad`",
         'db_connection_error': "ডাটাবেস সংযোগ উপলব্ধ নেই।",
         'feedback_success': "আপনার মতামতের জন্য ধন্যবাদ!",
-        'feedback_prompt': "অনুগ্রহ করে 'ফিডব্যাক' শব্দের পরে আপনার মতামত দিন।",
+        'feedback_prompt': "ভুল ফর্ম্যাট। অনুগ্রহ করে 'ফিডব্যাক' শব্দের পরে আপনার মতামত দিন।\nউদাহরণ: `feedback বটটি খুব সহায়ক।`",
         'error_message': "দুঃখিত, একটি ত্রুটি ঘটেছে।",
         'image_error': "দুঃখিত, আমি ছবির ফাইলটি প্রক্রিয়া করতে পারিনি।",
-        'vaccine_prompt': "শিশুর ব্যক্তিগত টিকাদানের সময়সূচী পেতে, অনুগ্রহ করে এই ফর্ম্যাটে জন্ম তারিখ দিন:\n`schedule dob DD-MM-YYYY`",
-        'dob_error': "তারিখটি বোঝা যায়নি। অনুগ্রহ করে DD-MM-YYYY ফর্ম্যাট ব্যবহার করুন, উদাহরণস্বরূপ: `schedule dob 25-12-2024`",
+        'vaccine_prompt': "শিশুর ব্যক্তিগত টিকাদানের সময়সূচী পেতে, অনুগ্রহ করে এই ফর্ম্যাটে জন্ম তারিখ দিন: DD-MM-YYYY",
+        'dob_error': "ভুল ফর্ম্যাট। অনুগ্রহ করে DD-MM-YYYY ফর্ম্যাট ব্যবহার করুন, উদাহরণস্বরূপ: `25-12-2024`",
         'schedule_saved': "এখানে আপনার সন্তানের আসন্ন টিকাদানের সময়সূচী দেওয়া হল। আমি প্রতিটি নির্ধারিত তারিখের আগে আপনাকে একটি অনুস্মারকও পাঠাব।"
+    },
+    'or': {
+        'set_district_success': "ଧନ୍ୟବାଦ! ଆପଣଙ୍କ ଜିଲ୍ଲା {district_name} କୁ ସେଟ୍ କରାଯାଇଛି।",
+        'no_district_for_alert': "ସ୍ଥାନୀୟ ସ୍ୱାସ୍ଥ୍ୟ ସତର୍କତା ପାଇବାକୁ ଦୟାକରି ପ୍ରଥମେ ଆପଣଙ୍କର ଜିଲ୍ଲା ସେଟ୍ କରନ୍ତୁ। ପଠାନ୍ତୁ: `set district [ଆପଣଙ୍କ ଜିଲ୍ଲା ନାମ]`",
+        'no_alert_found': "ଆପଣଙ୍କର ପଞ୍ଜୀକୃତ ଜିଲ୍ଲା {district_name} ପାଇଁ କୌଣସି ନୂତନ ସ୍ୱାସ୍ଥ୍ୟ ସତର୍କତା ନାହିଁ।",
+        'update_district_prompt': "ଆପଣଙ୍କ ସ୍ଥାନ ସେଟ୍ କିମ୍ବା ଅପଡେଟ୍ କରିବାକୁ, ଦୟାକରି ଏହି ଫର୍ମାଟରେ ଏକ ବାର୍ତ୍ତା ପଠାନ୍ତୁ:\n`set district [ଆପଣଙ୍କ ଜିଲ୍ଲା ନାମ]`",
+        'provide_district_name': "ଭୁଲ ଫର୍ମାଟ୍। ଦୟାକରି ଏକ ଜିଲ୍ଲା ନାମ ପ୍ରଦାନ କରନ୍ତୁ।\nଉଦାହରଣ: `set district Murshidabad`",
+        'db_connection_error': "ଡାଟାବେସ୍ ସଂଯୋଗ ଉପଲବ୍ଧ ନାହିଁ।",
+        'feedback_success': "ଆପଣଙ୍କ ମତାମତ ପାଇଁ ଧନ୍ୟବାଦ!",
+        'feedback_prompt': "ଭୁଲ ଫର୍ମାଟ୍। ଦୟାକରି 'ଫିଡବ୍ୟାକ୍' ଶବ୍ଦ ପରେ ଆପଣଙ୍କର ମତାମତ ଦିଅନ୍ତୁ।\nଉଦାହରଣ: `feedback ଏହି ବଟ୍ ବହୁତ ସାହାଯ୍ୟକାରୀ ଅଟେ।`",
+        'error_message': "କ୍ଷମା କରନ୍ତୁ, ଏକ ତ୍ରୁଟି ଦେଖାଗଲା।",
+        'image_error': "କ୍ଷମା କରନ୍ତୁ, ମୁଁ ଇମେଜ୍ ଫାଇଲ୍ ପ୍ରକ୍ରିୟାକରଣ କରିପାରିଲି ନାହିଁ।",
+        'vaccine_prompt': "ଶିଶୁର ବ୍ୟକ୍ତିଗତ ଟୀକାକରଣ କାର୍ଯ୍ୟସୂଚୀ ପାଇବାକୁ, ଦୟାକରି ଏହି ଫର୍ମାଟରେ ଜନ୍ମ ତାରିଖ ଦିଅନ୍ତୁ: DD-MM-YYYY",
+        'dob_error': "ଭୁଲ ଫର୍ମାଟ୍। ଦୟାକରି DD-MM-YYYY ଫର୍ମାଟ୍ ବ୍ୟବହାର କରନ୍ତୁ, ଉଦାହରଣ: `25-12-2024`",
+        'schedule_saved': "ଏଠାରେ ଆପଣଙ୍କ ଶିଶୁର ଆଗାମୀ ଟୀକାକରଣ କାର୍ଯ୍ୟସୂଚୀ ଅଛି। ମୁଁ ଆପଣଙ୍କୁ ପ୍ରତ୍ୟେକ ନିର୍ଦ୍ଧାରିତ ତାରିଖ ପୂର୍ବରୁ ଏକ ସ୍ମାରକ ମଧ୍ୟ ପଠାଇବି।"
     }
 }
 
@@ -129,18 +144,21 @@ def whatsapp_reply():
     clean_msg = incoming_msg.strip().lower()
 
     try:
-        # --- Language Handling with Memory ---
+        # --- Language and State Handling with Memory ---
         stored_lang = 'en'
+        user_state = None
         user_doc_ref = None
         if db:
             user_doc_ref = db.collection('users').document(user_phone_number)
             user_doc = user_doc_ref.get()
             if user_doc.exists:
-                stored_lang = user_doc.to_dict().get('language', 'en')
+                user_data = user_doc.to_dict()
+                stored_lang = user_data.get('language', 'en')
+                user_state = user_data.get('state')
 
-        is_command = any(keyword in clean_msg for keyword in ['alert', 'district', 'feedback', 'schedule', 'dob'])
+        is_command = any(keyword in clean_msg for keyword in ['alert', 'district', 'feedback', 'schedule', 'vaccine'])
 
-        if not is_command and incoming_msg:
+        if not is_command and incoming_msg and user_state is None:
             try:
                 current_lang = detect(incoming_msg)
                 if db and current_lang != stored_lang:
@@ -153,43 +171,45 @@ def whatsapp_reply():
         language_name = lang_map.get(stored_lang, 'English')
         responses = RESPONSES.get(stored_lang, RESPONSES['en'])
 
-        # --- Keyword Logic ---
-        if 'schedule' in clean_msg or 'vaccine' in clean_msg:
-            if 'dob' in clean_msg:
-                # User provided DOB, calculate schedule
-                try:
-                    dob_str = clean_msg.split('dob')[1].strip()
-                    dob = parse(dob_str, dayfirst=True).date()
+        # --- State-Based Logic: Awaiting DOB ---
+        if user_state == 'awaiting_dob':
+            try:
+                dob = parse(incoming_msg.strip(), dayfirst=True).date()
+                
+                schedule_list = []
+                for item in vaccine_data['schedule']:
+                    due_date = dob
+                    if 'due_weeks' in item:
+                        due_date += timedelta(weeks=item['due_weeks'])
+                    elif 'due_months' in item:
+                        due_date += timedelta(days=item['due_months'] * 30)
                     
-                    schedule_list = []
-                    for item in vaccine_data['schedule']:
-                        due_date = dob
-                        if 'due_weeks' in item:
-                            due_date += timedelta(weeks=item['due_weeks'])
-                        elif 'due_months' in item:
-                            due_date += timedelta(days=item['due_months'] * 30)
-                        
-                        schedule_list.append({
-                            'name': item['name'],
-                            'due_date': due_date.strftime('%d-%m-%Y'),
-                            'due_text': item['due_text']
-                        })
+                    schedule_list.append({
+                        'name': item['name'],
+                        'due_date': due_date.strftime('%d-%m-%Y'),
+                        'due_text': item['due_text']
+                    })
 
-                    if db:
-                        user_doc_ref.set({'vaccine_schedule': schedule_list, 'dob': str(dob)}, merge=True)
+                if db:
+                    user_doc_ref.set({'vaccine_schedule': schedule_list, 'dob': str(dob), 'state': None}, merge=True)
 
-                    response_text = f"{responses['schedule_saved']}\n\n"
-                    for item in schedule_list:
-                        response_text += f"*{item['due_text']}* ({item['due_date']}):\n- {item['name']}\n\n"
-                    msg.body(response_text)
+                response_text = f"{responses['schedule_saved']}\n\n"
+                for item in schedule_list:
+                    response_text += f"*{item['due_text']}* ({item['due_date']}):\n- {item['name']}\n\n"
+                msg.body(response_text)
 
-                except Exception as e:
-                    print(f"DOB parsing error: {e}")
-                    msg.body(responses['dob_error'])
-            else:
-                msg.body(responses['vaccine_prompt'])
+            except Exception as e:
+                print(f"DOB parsing error from state: {e}")
+                msg.body(responses['dob_error'])
             return str(resp)
 
+        # --- Keyword Logic ---
+        if 'schedule' in clean_msg or 'vaccine' in clean_msg:
+            if db:
+                user_doc_ref.set({'state': 'awaiting_dob'}, merge=True)
+            msg.body(responses['vaccine_prompt'])
+            return str(resp)
+            
         elif clean_msg == 'alert':
             model = genai.GenerativeModel('gemini-1.5-flash-latest')
             user_district = ""
@@ -232,11 +252,23 @@ def whatsapp_reply():
                 msg.body(responses['provide_district_name'])
             return str(resp)
         
+        elif clean_msg.startswith('feedback'):
+            feedback_text = incoming_msg.strip()[len('feedback '):]
+            if db and feedback_text:
+                db.collection('feedback').add({
+                    'user': user_phone_number,
+                    'message': feedback_text,
+                    'timestamp': firestore.SERVER_TIMESTAMP
+                })
+                msg.body(responses['feedback_success'])
+            else:
+                msg.body(responses['feedback_prompt'])
+            return str(resp)
+
         # --- AI Processing Logic ---
         model = genai.GenerativeModel('gemini-1.5-flash-latest')
         
         if media_url:
-            # Image Logic
             image_response = requests.get(media_url, auth=(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN))
             mime_type = image_response.headers.get('Content-Type')
             
@@ -251,19 +283,16 @@ def whatsapp_reply():
                 if response.text and response.text.strip():
                     msg.body(response.text)
                 else:
-                    print(f"DEBUG: Gemini returned an empty response for image prompt.")
                     msg.body(responses['error_message'])
             else:
                 msg.body(responses['image_error'])
         else:
-            # Text Logic
             prompt = PROMPT_TEXT.format(language_name=language_name, knowledge_base=knowledge_base, incoming_msg=incoming_msg)
             response = model.generate_content(prompt)
             
             if response.text and response.text.strip():
                 msg.body(response.text)
             else:
-                print(f"DEBUG: Gemini returned an empty response for prompt: {prompt}")
                 msg.body(responses['error_message'])
 
     except Exception as e:
