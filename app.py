@@ -7,10 +7,9 @@ from dotenv import load_dotenv
 import json
 import firebase_admin
 from firebase_admin import credentials, firestore
+from langdetect import detect, LangDetectException
 
 # --- Firebase Initialization ---
-# IMPORTANT: You need to download your Firebase service account key and save it as 'serviceAccountKey.json'
-# This file MUST be added to your .gitignore file to keep it secure.
 try:
     cred = credentials.Certificate("serviceAccountKey.json")
     firebase_admin.initialize_app(cred)
@@ -46,27 +45,23 @@ except FileNotFoundError:
     outbreak_data = {"alerts": []}
 
 # --- Universal Prompts ---
-PROMPT_TEXT = f"""
+PROMPT_TEXT = """
 Your task is to be a helpful AI health assistant.
-First, identify the language of the user's question below (it could be English, Hinglish, Hindi, Bengali, Odia, etc.).
-Then, answer the user's question in that same language.
+YOU MUST respond in the following language: {language_name}.
 Base your answer ONLY on the following information from the knowledge base:
 ---
 {knowledge_base}
 ---
-User's question: "{{incoming_msg}}"
-If the question is not in the knowledge base, respond in the user's language with a message like: 'I can only answer questions about topics in my knowledge base.'
+User's question: "{incoming_msg}"
+If the question is not in the knowledge base, respond in {language_name} with a message like: 'I can only answer questions about topics in my knowledge base.'
 """
 
 PROMPT_IMAGE = """
-You are a medical information assistant. Your task is to analyze the user-provided image of a medicine package and provide a structured summary based on your internal knowledge.
-
-**Language Control Rules (Follow these strictly):**
-1.  Analyze the user's text caption provided separately. If a caption exists and has a detectable language, YOU MUST respond in that same language.
-2.  If there is NO text caption, you must INFER the most likely language for the user. Consider the text visible on the package (e.g., if it's in Hindi, reply in Hindi). If no clues are available, default to English.
+You are a medical information assistant. Your task is to analyze the user-provided image of a medicine package.
+YOU MUST respond in the following language: {language_name}.
 
 **Response Format:**
-- Always start with a disclaimer in the identified or inferred language: '*I am an AI assistant, not a doctor. Please consult a healthcare professional for medical advice.*'
+- Always start with a disclaimer in {language_name}: '*I am an AI assistant, not a doctor. Please consult a healthcare professional for medical advice.*'
 - Provide the information in this structured format:
     1.  **Medicine Name:** (Brand and Generic)
     2.  **Form:** (Tablet, Syrup, etc.)
@@ -75,14 +70,13 @@ You are a medical information assistant. Your task is to analyze the user-provid
     5.  **General Dosage Guidance:**
     6.  **Storage Instructions:**
     7.  **Common Warnings:**
-- If you do not have reliable information on any point, you MUST state "Information not available in my knowledge base" in the response language. Do not invent details.
+- If you do not have reliable information on any point, you MUST state "Information not available in my knowledge base" in {language_name}. Do not invent details.
 """
 
 @app.route("/whatsapp", methods=['POST'])
 def whatsapp_reply():
     incoming_msg = request.values.get('Body', '')
     media_url = request.values.get('MediaUrl0')
-    # Get the user's phone number, which will be our unique ID
     user_phone_number = request.values.get('From') 
 
     resp = MessagingResponse()
@@ -91,11 +85,33 @@ def whatsapp_reply():
     clean_msg = incoming_msg.strip().lower()
 
     try:
+        # --- Language Handling with Memory ---
+        stored_lang = 'en' # Default language
+        if db:
+            user_doc_ref = db.collection('users').document(user_phone_number)
+            user_doc = user_doc_ref.get()
+            if user_doc.exists:
+                stored_lang = user_doc.to_dict().get('language', 'en')
+
+        try:
+            current_lang = detect(incoming_msg) if incoming_msg else stored_lang
+        except LangDetectException:
+            current_lang = stored_lang # If detection fails, use the stored language
+
+        # If a new language is detected, update it in the database
+        if db and current_lang != stored_lang:
+            user_doc_ref.set({'language': current_lang}, merge=True)
+            stored_lang = current_lang
+        
+        # Map language code to full name for the prompt
+        lang_map = {'en': 'English', 'hi': 'Hindi', 'bn': 'Bengali', 'or': 'Odia'}
+        language_name = lang_map.get(stored_lang, 'English')
+
+
         # --- Keyword Logic ---
         if clean_msg == 'alert':
-            user_ref = db.collection('users').document(user_phone_number).get()
-            if user_ref.exists:
-                user_district = user_ref.to_dict().get('district', '').lower()
+            if user_doc.exists:
+                user_district = user_doc.to_dict().get('district', '').lower()
                 alert_found = False
                 for alert in outbreak_data["alerts"]:
                     if alert['district'].lower() == user_district:
@@ -106,7 +122,7 @@ def whatsapp_reply():
                 if not alert_found:
                     msg.body("There are no new health alerts for your registered district.")
             else:
-                msg.body("Please set your district first to receive local alerts. Send: `set district [Your District Name]`")
+                msg.body("Please set your district first. Send: `set district [Your District Name]`")
             return str(resp)
         
         elif 'update district' in clean_msg or 'change district' in clean_msg:
@@ -117,16 +133,28 @@ def whatsapp_reply():
             parts = incoming_msg.strip().split()
             if len(parts) > 2:
                 district_name = " ".join(parts[2:])
-                # Save the user's district to Firestore
                 if db:
-                    user_ref = db.collection('users').document(user_phone_number)
-                    user_ref.set({'district': district_name})
+                    user_doc_ref.set({'district': district_name}, merge=True)
                     msg.body(f"Thank you! Your district has been set to: {district_name}")
                 else:
-                    msg.body("Database connection is not available. Could not save your district.")
+                    msg.body("Database connection is not available.")
             else:
-                msg.body("Please provide a district name after 'set district'. For example: `set district Murshidabad`")
+                msg.body("Please provide a district name. Example: `set district Murshidabad`")
             return str(resp)
+
+        elif clean_msg.startswith('feedback'):
+            feedback_text = incoming_msg.strip()[len('feedback '):]
+            if db and feedback_text:
+                db.collection('feedback').add({
+                    'user': user_phone_number,
+                    'message': feedback_text,
+                    'timestamp': firestore.SERVER_TIMESTAMP
+                })
+                msg.body("Thank you for your feedback! It helps us improve.")
+            else:
+                msg.body("Please provide your feedback after the word 'feedback'.")
+            return str(resp)
+
 
         # --- AI Processing Logic ---
         model = genai.GenerativeModel('gemini-1.5-flash-latest')
@@ -139,7 +167,8 @@ def whatsapp_reply():
             if mime_type and mime_type.startswith('image/'):
                 image_data = image_response.content
                 image_parts = [{"mime_type": mime_type, "data": image_data}]
-                full_prompt = [PROMPT_IMAGE, f"User's text caption: {incoming_msg}", image_parts[0]]
+                prompt = PROMPT_IMAGE.format(language_name=language_name)
+                full_prompt = [prompt, f"User's text caption: {incoming_msg}", image_parts[0]]
                 response = model.generate_content(full_prompt)
                 response.resolve()
                 msg.body(response.text)
@@ -147,7 +176,7 @@ def whatsapp_reply():
                 msg.body("Sorry, I could not process the image file.")
         else:
             # Text Logic
-            prompt = PROMPT_TEXT.format(incoming_msg=incoming_msg)
+            prompt = PROMPT_TEXT.format(language_name=language_name, knowledge_base=knowledge_base, incoming_msg=incoming_msg)
             response = model.generate_content(prompt)
             msg.body(response.text)
 
