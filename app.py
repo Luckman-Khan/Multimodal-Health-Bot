@@ -37,20 +37,16 @@ User's question: "{{incoming_msg}}"
 If the question is not in the knowledge base, respond in the user's language with a message like: 'I can only answer questions about topics in my knowledge base.'
 """
 
-# This prompt now uses the model's internal knowledge for image analysis
+# UPDATED: This prompt now infers the language if no caption is provided
 PROMPT_IMAGE = """
 You are a medical information assistant. Your task is to analyze the user-provided image of a medicine package and provide a structured summary based on your internal knowledge.
 
-**Language Rules:**
-- Analyze the user's text caption: "{incoming_msg}"
-- If a caption exists, reply in that language. Otherwise, use English.
-
-**Execution Steps:**
-1.  **Identify:** Look at the image and extract the medicine's brand and generic name.
-2.  **Recall & Summarize:** Use your pre-trained knowledge to provide a structured summary about this medicine.
+**Language Control Rules (Follow these strictly):**
+1.  Analyze the user's text caption provided separately. If a caption exists and has a detectable language, YOU MUST respond in that same language.
+2.  If there is NO text caption, you must INFER the most likely language for the user. Consider the text visible on the package (e.g., if it's in Hindi, reply in Hindi). If no clues are available, default to English.
 
 **Response Format:**
-- Always start with a disclaimer in the identified language: '*I am an AI assistant, not a doctor. Please consult a healthcare professional for medical advice.*'
+- Always start with a disclaimer in the identified or inferred language: '*I am an AI assistant, not a doctor. Please consult a healthcare professional for medical advice.*'
 - Provide the information in this structured format:
     1.  **Medicine Name:** (Brand and Generic)
     2.  **Form:** (Tablet, Syrup, etc.)
@@ -59,7 +55,7 @@ You are a medical information assistant. Your task is to analyze the user-provid
     5.  **General Dosage Guidance:**
     6.  **Storage Instructions:**
     7.  **Common Warnings:**
-- If you do not have reliable information on any point, you MUST state "Information not available in my knowledge base." Do not invent details.
+- If you do not have reliable information on any point, you MUST state "Information not available in my knowledge base" in the response language. Do not invent details.
 """
 
 @app.route("/whatsapp", methods=['POST'])
@@ -82,11 +78,11 @@ def whatsapp_reply():
                 image_data = image_response.content
                 image_parts = [{"mime_type": mime_type, "data": image_data}]
 
-                # Format the new image prompt with the user's caption
-                structured_prompt = PROMPT_IMAGE.format(incoming_msg=incoming_msg)
+                # Combine prompt and caption cleanly
+                full_prompt = [PROMPT_IMAGE, f"User's text caption: {incoming_msg}", image_parts[0]]
                 
-                # Generate the response without using the 'tools' parameter
-                response = model.generate_content([structured_prompt, image_parts[0]])
+                # Generate the response
+                response = model.generate_content(full_prompt)
                 response.resolve()
                 msg.body(response.text)
             else:
