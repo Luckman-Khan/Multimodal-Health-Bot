@@ -239,6 +239,8 @@ def whatsapp_reply():
                     print(f"DEBUG: Raw AI Alert Response: {response.text}") # DEBUG LINE
                     if response.text and response.text.strip():
                         msg.body(response.text)
+                    else: # Fallback for empty AI response
+                        msg.body(responses['error_message'])
                 else:
                     msg.body(responses['no_alert_found'].format(district_name=user_district.capitalize()))
         
@@ -283,6 +285,8 @@ def whatsapp_reply():
                     print(f"DEBUG: Raw AI Image Response: {response.text}") # DEBUG LINE
                     if response.text and response.text.strip():
                         msg.body(response.text)
+                    else: # Fallback for empty AI response
+                        msg.body(responses['error_message'])
                 else:
                     msg.body(responses['image_error'])
             else:
@@ -291,6 +295,8 @@ def whatsapp_reply():
                 print(f"DEBUG: Raw AI Text Response: {response.text}") # DEBUG LINE
                 if response.text and response.text.strip():
                     msg.body(response.text)
+                else: # Fallback for empty AI response
+                    msg.body(responses['error_message'])
 
     except Exception as e:
         print(f"An error occurred: {e}")
