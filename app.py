@@ -236,6 +236,7 @@ def whatsapp_reply():
                 if alert_found:
                     alert_prompt = f"Generate a concise health alert in {language_name} based on this data: Disease: {alert_found['disease']}, Recommendation: {alert_found['recommendation']}. Start with a warning emoji (⚠️)."
                     response = model.generate_content(alert_prompt)
+                    print(f"DEBUG: Raw AI Alert Response: {response.text}") # DEBUG LINE
                     if response.text and response.text.strip():
                         msg.body(response.text)
                 else:
@@ -279,6 +280,7 @@ def whatsapp_reply():
                     full_prompt = [prompt, f"User's text caption: {incoming_msg}", image_parts[0]]
                     response = model.generate_content(full_prompt)
                     response.resolve()
+                    print(f"DEBUG: Raw AI Image Response: {response.text}") # DEBUG LINE
                     if response.text and response.text.strip():
                         msg.body(response.text)
                 else:
@@ -286,6 +288,7 @@ def whatsapp_reply():
             else:
                 prompt = PROMPT_TEXT.format(language_name=language_name, knowledge_base=knowledge_base, incoming_msg=incoming_msg)
                 response = model.generate_content(prompt)
+                print(f"DEBUG: Raw AI Text Response: {response.text}") # DEBUG LINE
                 if response.text and response.text.strip():
                     msg.body(response.text)
 
@@ -295,7 +298,7 @@ def whatsapp_reply():
         responses = RESPONSES.get(stored_lang, RESPONSES['en'])
         msg.body(responses['error_message'])
 
-    # --- NEW: Final Fallback to prevent silent failures ---
+    # --- Final Fallback to prevent silent failures ---
     if not msg.body:
         print("DEBUG: No response was set. Sending default error message.")
         responses = RESPONSES.get(stored_lang, RESPONSES['en'])
