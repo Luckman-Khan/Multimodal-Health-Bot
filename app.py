@@ -61,29 +61,64 @@ def whatsapp_reply():
 
     try:
         model = genai.GenerativeModel('gemini-1.5-flash-latest')
-        
+
         if media_url:
-            # Image Logic
+            # --- Image Logic ---
             image_response = requests.get(media_url, auth=(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN))
             mime_type = image_response.headers.get('Content-Type')
-            
+
             if mime_type and mime_type.startswith('image/'):
                 image_data = image_response.content
                 image_parts = [{"mime_type": mime_type, "data": image_data}]
-                if incoming_msg.strip():
-                    user_caption = f"\nUser's text caption: {incoming_msg}"
-                else:
-                    user_caption = "\nNo text caption provided by user."
 
-                full_prompt = [PROMPT_IMAGE + user_caption, image_parts[0]]
+                # Step 1: Extract medicine name & form
+                extract_prompt = """
+                You are a helpful assistant. Look at this medicine package image.
+                Extract ONLY:
+                - Medicine name (brand and generic if visible)
+                - Form (tablet, capsule, syrup, etc.)
+                Respond in plain text only.
+                """
+                extract_response = model.generate_content([extract_prompt, image_parts[0]])
+                extract_response.resolve()
+                medicine_name = extract_response.text.strip()
 
-                response = model.generate_content(full_prompt, stream=False)
-                response.resolve()
-                msg.body(response.text)
+                # Step 2: Search reliable sources
+                from openai import web  # assumes you have web search enabled
+                search_query = f"{medicine_name} drug use dosage age group storage site:fda.gov OR site:drugs.com OR site:nhs.uk"
+                search_results = web.search(search_query)
+
+                # Step 3: Summarize in structured format
+                structured_prompt = f"""
+                You are a medical information assistant.
+                Medicine identified: {medicine_name}
+
+                Use the following reliable source results:
+                {search_results}
+
+                Respond following these rules:
+                - If caption exists, reply in that language; otherwise, use English.
+                - Always start with: "*I am an AI assistant, not a doctor. Please consult a healthcare professional for medical advice.*"
+                - Provide structured info:
+                  1. Medicine Name (brand + generic)
+                  2. Form (tablet, syrup, etc.)
+                  3. Primary Use / Indication
+                  4. Recommended Age Group
+                  5. Typical Dosage Guidance (general, not personalized)
+                  6. Special Instructions (e.g., storage, use after opening if syrup)
+                  7. Common Warnings / Side Effects
+                - Do NOT invent details. If not available, write "Not specified in reliable sources."
+                """
+                final_response = model.generate_content(structured_prompt)
+                final_response.resolve()
+
+                msg.body(final_response.text)
+
             else:
                 msg.body("Sorry, I could not process the image file.")
+
         else:
-            # Text Logic
+            # --- Text Logic ---
             prompt = PROMPT_TEXT.format(incoming_msg=incoming_msg)
             response = model.generate_content(prompt)
             msg.body(response.text)
@@ -93,6 +128,7 @@ def whatsapp_reply():
         msg.body("Sorry, I encountered an error. Please try again later.")
 
     return str(resp)
+
 
 
 if __name__ == "__main__":
