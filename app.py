@@ -71,24 +71,31 @@ def whatsapp_reply():
 
     resp = MessagingResponse()
     msg = resp.message()
+    
+    # Clean the incoming message for keyword checks
+    clean_msg = incoming_msg.strip().lower()
 
     try:
-        # --- NEW: Check for the 'alert' keyword ---
-        if incoming_msg.strip().lower() == 'alert':
+        # --- Keyword Logic ---
+        if clean_msg == 'alert':
             if outbreak_data["alerts"]:
-                # For the demo, we'll just show the first alert.
                 alert = outbreak_data["alerts"][0]
-                # A simple way to provide a multilingual alert
                 alert_message = f"{alert['message_en']}\n\n{alert['message_hi']}\n\n{alert['message_bn']}\n\n{alert['message_or']}"
                 msg.body(alert_message)
             else:
                 msg.body("There are no new health alerts in your area.")
             return str(resp)
+        
+        # NEW: Handle district update requests
+        elif 'update district' in clean_msg or 'change district' in clean_msg:
+            msg.body("To update your location for health alerts, please reply with the name of your new district.")
+            return str(resp)
 
+        # --- AI Processing Logic ---
         model = genai.GenerativeModel('gemini-1.5-flash-latest')
         
         if media_url:
-            # --- Image Logic ---
+            # Image Logic
             image_response = requests.get(media_url, auth=(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN))
             mime_type = image_response.headers.get('Content-Type')
             
@@ -102,7 +109,7 @@ def whatsapp_reply():
             else:
                 msg.body("Sorry, I could not process the image file.")
         else:
-            # --- Text Logic ---
+            # Text Logic
             prompt = PROMPT_TEXT.format(incoming_msg=incoming_msg)
             response = model.generate_content(prompt)
             msg.body(response.text)
