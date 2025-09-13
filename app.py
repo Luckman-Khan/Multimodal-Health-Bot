@@ -61,7 +61,7 @@ RESPONSES = {
         'error_message': "Sorry, I encountered an error. Please try again later.",
         'image_error': "Sorry, I could not process the image file.",
         'vaccine_prompt': "To get a personalized child vaccination schedule, please provide the date of birth in this format: DD-MM-YYYY",
-        'dob_error': "Incorrect format. Please use DD-MM-YYYY format, for example: `25-12-2024`",
+        'dob_error': "Incorrect format. Please start again by sending 'schedule' or 'vaccine'.",
         'schedule_saved': "Here is the upcoming vaccination schedule for your child. I will also send you a reminder before each due date."
     },
     'hi': {
@@ -76,7 +76,7 @@ RESPONSES = {
         'error_message': "क्षमा करें, मुझे एक त्रुटि का सामना करना पड़ा।",
         'image_error': "क्षमा करें, मैं छवि फ़ाइल को संसाधित नहीं कर सका।",
         'vaccine_prompt': "बच्चे का व्यक्तिगत टीकाकरण कार्यक्रम प्राप्त करने के लिए, कृपया इस प्रारूप में जन्म तिथि प्रदान करें: DD-MM-YYYY",
-        'dob_error': "गलत प्रारूप। कृपया DD-MM-YYYY प्रारूप का उपयोग करें, उदाहरण के लिए: `25-12-2024`",
+        'dob_error': "गलत प्रारूप। कृपया 'schedule' या 'vaccine' भेजकर फिर से शुरू करें।",
         'schedule_saved': "यहाँ आपके बच्चे का आगामी टीकाकरण कार्यक्रम है। मैं आपको प्रत्येक नियत तारीख से पहले एक अनुस्मारक भी भेजूंगा।"
     },
     'bn': {
@@ -91,7 +91,7 @@ RESPONSES = {
         'error_message': "দুঃখিত, একটি ত্রুটি ঘটেছে।",
         'image_error': "দুঃখিত, আমি ছবির ফাইলটি প্রক্রিয়া করতে পারিনি।",
         'vaccine_prompt': "শিশুর ব্যক্তিগত টিকাদানের সময়সূচী পেতে, অনুগ্রহ করে এই ফর্ম্যাটে জন্ম তারিখ দিন: DD-MM-YYYY",
-        'dob_error': "ভুল ফর্ম্যাট। অনুগ্রহ করে DD-MM-YYYY ফর্ম্যাট ব্যবহার করুন, উদাহরণস্বরূপ: `25-12-2024`",
+        'dob_error': "ভুল ফর্ম্যাট। অনুগ্রহ করে 'schedule' বা 'vaccine' পাঠিয়ে আবার শুরু করুন।",
         'schedule_saved': "এখানে আপনার সন্তানের আসন্ন টিকাদানের সময়সূচী দেওয়া হল। আমি প্রতিটি নির্ধারিত তারিখের আগে আপনাকে একটি অনুস্মারকও পাঠাব।"
     },
     'or': {
@@ -106,7 +106,7 @@ RESPONSES = {
         'error_message': "କ୍ଷମା କରନ୍ତୁ, ଏକ ତ୍ରୁଟି ଦେଖାଗଲା।",
         'image_error': "କ୍ଷମା କରନ୍ତୁ, ମୁଁ ଇମେଜ୍ ଫାଇଲ୍ ପ୍ରକ୍ରିୟାକରଣ କରିପାରିଲି ନାହିଁ।",
         'vaccine_prompt': "ଶିଶୁର ବ୍ୟକ୍ତିଗତ ଟୀକାକରଣ କାର୍ଯ୍ୟସୂଚୀ ପାଇବାକୁ, ଦୟାକରି ଏହି ଫର୍ମାଟରେ ଜନ୍ମ ତାରିଖ ଦିଅନ୍ତୁ: DD-MM-YYYY",
-        'dob_error': "ଭୁଲ ଫର୍ମାଟ୍। ଦୟାକରି DD-MM-YYYY ଫର୍ମାଟ୍ ବ୍ୟବହାର କରନ୍ତୁ, ଉଦାହରଣ: `25-12-2024`",
+        'dob_error': "ଭୁଲ ଫର୍ମାଟ୍। ଦୟାକରି 'schedule' କିମ୍ବା 'vaccine' ପଠାଇ ପୁଣିଥରେ ଆରମ୍ଭ କରନ୍ତୁ।",
         'schedule_saved': "ଏଠାରେ ଆପଣଙ୍କ ଶିଶୁର ଆଗାମୀ ଟୀକାକରଣ କାର୍ଯ୍ୟସୂଚୀ ଅଛି। ମୁଁ ଆପଣଙ୍କୁ ପ୍ରତ୍ୟେକ ନିର୍ଦ୍ଧାରିତ ତାରିଖ ପୂର୍ବରୁ ଏକ ସ୍ମାରକ ମଧ୍ୟ ପଠାଇବି।"
     }
 }
@@ -200,6 +200,8 @@ def whatsapp_reply():
 
             except Exception as e:
                 print(f"DOB parsing error from state: {e}")
+                if db:
+                    user_doc_ref.set({'state': None}, merge=True) # Clear the state after an error
                 msg.body(responses['dob_error'])
             return str(resp)
 
