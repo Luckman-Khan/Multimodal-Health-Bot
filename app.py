@@ -79,7 +79,21 @@ RESPONSES = {
         'dob_error': "तारीख समझ में नहीं आई। कृपया DD-MM-YYYY प्रारूप का उपयोग करें, उदाहरण के लिए: `schedule dob 25-12-2024`",
         'schedule_saved': "यहाँ आपके बच्चे का आगामी टीकाकरण कार्यक्रम है। मैं आपको प्रत्येक नियत तारीख से पहले एक अनुस्मारक भी भेजूंगा।"
     },
-    # Add bn and or translations similarly
+    'bn': {
+        'set_district_success': "ধন্যবাদ! আপনার জেলা {district_name} হিসাবে সেট করা হয়েছে।",
+        'no_district_for_alert': "অনুগ্রহ করে প্রথমে আপনার জেলা সেট করুন। পাঠান: `set district [আপনার জেলার নাম]`",
+        'no_alert_found': "আপনার নিবন্ধিত জেলা {district_name} এর জন্য কোন নতুন স্বাস্থ্য সতর্কতা নেই।",
+        'update_district_prompt': "আপনার অবস্থান সেট বা আপডেট করতে, এই ফর্ম্যাটে একটি বার্তা পাঠান:\n`set district [আপনার জেলার নাম]`",
+        'provide_district_name': "অনুগ্রহ করে একটি জেলার নাম দিন। উদাহরণ: `set district Murshidabad`",
+        'db_connection_error': "ডাটাবেস সংযোগ উপলব্ধ নেই।",
+        'feedback_success': "আপনার মতামতের জন্য ধন্যবাদ!",
+        'feedback_prompt': "অনুগ্রহ করে 'ফিডব্যাক' শব্দের পরে আপনার মতামত দিন।",
+        'error_message': "দুঃখিত, একটি ত্রুটি ঘটেছে।",
+        'image_error': "দুঃখিত, আমি ছবির ফাইলটি প্রক্রিয়া করতে পারিনি।",
+        'vaccine_prompt': "শিশুর ব্যক্তিগত টিকাদানের সময়সূচী পেতে, অনুগ্রহ করে এই ফর্ম্যাটে জন্ম তারিখ দিন:\n`schedule dob DD-MM-YYYY`",
+        'dob_error': "তারিখটি বোঝা যায়নি। অনুগ্রহ করে DD-MM-YYYY ফর্ম্যাট ব্যবহার করুন, উদাহরণস্বরূপ: `schedule dob 25-12-2024`",
+        'schedule_saved': "এখানে আপনার সন্তানের আসন্ন টিকাদানের সময়সূচী দেওয়া হল। আমি প্রতিটি নির্ধারিত তারিখের আগে আপনাকে একটি অনুস্মারকও পাঠাব।"
+    }
 }
 
 # --- Universal Prompts ---
@@ -153,7 +167,6 @@ def whatsapp_reply():
                         if 'due_weeks' in item:
                             due_date += timedelta(weeks=item['due_weeks'])
                         elif 'due_months' in item:
-                            # A simple approximation for months
                             due_date += timedelta(days=item['due_months'] * 30)
                         
                         schedule_list.append({
@@ -165,7 +178,6 @@ def whatsapp_reply():
                     if db:
                         user_doc_ref.set({'vaccine_schedule': schedule_list, 'dob': str(dob)}, merge=True)
 
-                    # Format the response message
                     response_text = f"{responses['schedule_saved']}\n\n"
                     for item in schedule_list:
                         response_text += f"*{item['due_text']}* ({item['due_date']}):\n- {item['name']}\n\n"
@@ -175,23 +187,68 @@ def whatsapp_reply():
                     print(f"DOB parsing error: {e}")
                     msg.body(responses['dob_error'])
             else:
-                # Ask for DOB
                 msg.body(responses['vaccine_prompt'])
             return str(resp)
 
         elif clean_msg == 'alert':
-            # ... (alert logic remains the same) ...
             model = genai.GenerativeModel('gemini-1.5-flash-latest')
-            user_district = user_doc.to_dict().get('district', '').lower() if user_doc and user_doc.exists else ""
+            user_district = ""
+            if user_doc and user_doc.exists:
+                user_district = user_doc.to_dict().get('district', '').lower()
+            
             if not user_district:
-                msg.body(responses['no_district_for_alert'])
-                return str(resp)
-            # ... (rest of alert logic) ...
+                 msg.body(responses['no_district_for_alert'])
+                 return str(resp)
+
+            alert_found = None
+            for alert in outbreak_data.get("outbreaks", []):
+                if alert['district'].lower() == user_district:
+                    alert_found = alert
+                    break
+            
+            if alert_found:
+                alert_prompt = f"""
+                Generate a concise health alert in {language_name} based on this data:
+                - Disease: {alert_found['disease']}
+                - Recommendation: {alert_found['recommendation']}
+                Start with a warning emoji (⚠️).
+                """
+                response = model.generate_content(alert_prompt)
+                msg.body(response.text)
+            else:
+                msg.body(responses['no_alert_found'].format(district_name=user_district.capitalize()))
+            return str(resp)
 
         # ... (rest of keyword logic: set district, feedback, etc.) ...
+        elif clean_msg.startswith('set district'):
+            parts = incoming_msg.strip().split()
+            if len(parts) > 2:
+                district_name = " ".join(parts[2:])
+                if db:
+                    user_doc_ref.set({'district': district_name}, merge=True)
+                    msg.body(responses['set_district_success'].format(district_name=district_name))
+                else:
+                    msg.body(responses['db_connection_error'])
+            else:
+                msg.body(responses['provide_district_name'])
+            return str(resp)
         
         # --- AI Processing Logic ---
-        # ... (AI logic remains the same) ...
+        model = genai.GenerativeModel('gemini-1.5-flash-latest')
+        
+        if media_url:
+            # Image Logic ...
+        else:
+            # Text Logic
+            prompt = PROMPT_TEXT.format(language_name=language_name, knowledge_base=knowledge_base, incoming_msg=incoming_msg)
+            response = model.generate_content(prompt)
+            
+            # NEW: Check for empty response from AI
+            if response.text and response.text.strip():
+                msg.body(response.text)
+            else:
+                print(f"DEBUG: Gemini returned an empty response for prompt: {prompt}")
+                msg.body(responses['error_message'])
 
     except Exception as e:
         print(f"An error occurred: {e}")
