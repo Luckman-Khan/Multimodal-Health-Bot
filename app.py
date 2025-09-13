@@ -87,6 +87,8 @@ def whatsapp_reply():
     try:
         # --- Language Handling with Memory ---
         stored_lang = 'en' # Default language
+        user_doc_ref = None
+        user_doc = None
         if db:
             user_doc_ref = db.collection('users').document(user_phone_number)
             user_doc = user_doc_ref.get()
@@ -96,33 +98,46 @@ def whatsapp_reply():
         try:
             current_lang = detect(incoming_msg) if incoming_msg else stored_lang
         except LangDetectException:
-            current_lang = stored_lang # If detection fails, use the stored language
+            current_lang = stored_lang
 
-        # If a new language is detected, update it in the database
         if db and current_lang != stored_lang:
             user_doc_ref.set({'language': current_lang}, merge=True)
             stored_lang = current_lang
         
-        # Map language code to full name for the prompt
         lang_map = {'en': 'English', 'hi': 'Hindi', 'bn': 'Bengali', 'or': 'Odia'}
         language_name = lang_map.get(stored_lang, 'English')
 
-
         # --- Keyword Logic ---
         if clean_msg == 'alert':
-            if user_doc.exists:
+            model = genai.GenerativeModel('gemini-1.5-flash-latest')
+            user_district = ""
+            if user_doc and user_doc.exists:
                 user_district = user_doc.to_dict().get('district', '').lower()
-                alert_found = False
-                for alert in outbreak_data["alerts"]:
-                    if alert['district'].lower() == user_district:
-                        alert_message = f"{alert['message_en']}\n\n{alert['message_hi']}\n\n{alert['message_bn']}\n\n{alert['message_or']}"
-                        msg.body(alert_message)
-                        alert_found = True
-                        break
-                if not alert_found:
-                    msg.body("There are no new health alerts for your registered district.")
+            
+            if not user_district:
+                 msg.body("Please set your district first. Send: `set district [Your District Name]`")
+                 return str(resp)
+
+            alert_found = None
+            for alert in outbreak_data.get("outbreaks", []):
+                if alert['district'].lower() == user_district:
+                    alert_found = alert
+                    break
+            
+            if alert_found:
+                alert_prompt = f"""
+                You are a health alert system.
+                Generate a concise and clear health alert message in {language_name}.
+                The alert should be based on this data:
+                - Disease: {alert_found['disease']}
+                - Severity: {alert_found['severity']}
+                - Recommendation: {alert_found['recommendation']}
+                Start the message with a warning emoji (⚠️).
+                """
+                response = model.generate_content(alert_prompt)
+                msg.body(response.text)
             else:
-                msg.body("Please set your district first. Send: `set district [Your District Name]`")
+                msg.body(f"There are no new health alerts for your registered district: {user_district.capitalize()}")
             return str(resp)
         
         elif 'update district' in clean_msg or 'change district' in clean_msg:
@@ -154,7 +169,6 @@ def whatsapp_reply():
             else:
                 msg.body("Please provide your feedback after the word 'feedback'.")
             return str(resp)
-
 
         # --- AI Processing Logic ---
         model = genai.GenerativeModel('gemini-1.5-flash-latest')
