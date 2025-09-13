@@ -255,8 +255,7 @@ def whatsapp_reply():
         responses = RESPONSES.get(stored_lang, RESPONSES.get('en'))
         msg.body(responses['error_message'])
 
-    return str(resp)
+    return str(resp)    
 
 if __name__ == "__main__":
     app.run(port=5000, debug=True)
-
