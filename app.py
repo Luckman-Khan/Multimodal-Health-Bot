@@ -37,18 +37,29 @@ User's question: "{{incoming_msg}}"
 If the question is not in the knowledge base, respond in the user's language with a message like: 'I can only answer questions about topics in my knowledge base.'
 """
 
-# This single prompt will handle all languages for images
+# This prompt now uses the model's internal knowledge for image analysis
 PROMPT_IMAGE = """
-You are a helpful AI health assistant. Your task is to analyze an image and respond.
+You are a medical information assistant. Your task is to analyze the user-provided image of a medicine package and provide a structured summary based on your internal knowledge.
 
-**Language Control Rules:**
-1. Check for a text caption from the user. If a caption exists, YOU MUST respond in the same language as the caption.
-2. If there is NO text caption, YOU MUST respond in English. Do not use any other language.
+**Language Rules:**
+- Analyze the user's text caption: "{incoming_msg}"
+- If a caption exists, reply in that language. Otherwise, use English.
 
-**Response Instructions:**
-- Start your response with a disclaimer like this in the chosen language: '*I am an AI assistant, not a doctor. Please consult a healthcare professional for medical advice.*'
-- Describe what you see in simple terms. DO NOT give a diagnosis.
-- Focus only on medically relevant items in the image.
+**Execution Steps:**
+1.  **Identify:** Look at the image and extract the medicine's brand and generic name.
+2.  **Recall & Summarize:** Use your pre-trained knowledge to provide a structured summary about this medicine.
+
+**Response Format:**
+- Always start with a disclaimer in the identified language: '*I am an AI assistant, not a doctor. Please consult a healthcare professional for medical advice.*'
+- Provide the information in this structured format:
+    1.  **Medicine Name:** (Brand and Generic)
+    2.  **Form:** (Tablet, Syrup, etc.)
+    3.  **Primary Use:**
+    4.  **Recommended Age Group:**
+    5.  **General Dosage Guidance:**
+    6.  **Storage Instructions:**
+    7.  **Common Warnings:**
+- If you do not have reliable information on any point, you MUST state "Information not available in my knowledge base." Do not invent details.
 """
 
 @app.route("/whatsapp", methods=['POST'])
@@ -61,62 +72,25 @@ def whatsapp_reply():
 
     try:
         model = genai.GenerativeModel('gemini-1.5-flash-latest')
-
+        
         if media_url:
-            # --- Image Logic ---
+            # --- Image Logic without Grounded Search ---
             image_response = requests.get(media_url, auth=(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN))
             mime_type = image_response.headers.get('Content-Type')
-
+            
             if mime_type and mime_type.startswith('image/'):
                 image_data = image_response.content
                 image_parts = [{"mime_type": mime_type, "data": image_data}]
 
-                # Step 1: Extract medicine name & form
-                extract_prompt = """
-                You are a helpful assistant. Look at this medicine package image.
-                Extract ONLY:
-                - Medicine name (brand and generic if visible)
-                - Form (tablet, capsule, syrup, etc.)
-                Respond in plain text only.
-                """
-                extract_response = model.generate_content([extract_prompt, image_parts[0]])
-                extract_response.resolve()
-                medicine_name = extract_response.text.strip()
-
-                # Step 2: Search reliable sources
-                from openai import web  # assumes you have web search enabled
-                search_query = f"{medicine_name} drug use dosage age group storage site:fda.gov OR site:drugs.com OR site:nhs.uk"
-                search_results = web.search(search_query)
-
-                # Step 3: Summarize in structured format
-                structured_prompt = f"""
-                You are a medical information assistant.
-                Medicine identified: {medicine_name}
-
-                Use the following reliable source results:
-                {search_results}
-
-                Respond following these rules:
-                - If caption exists, reply in that language; otherwise, use English.
-                - Always start with: "*I am an AI assistant, not a doctor. Please consult a healthcare professional for medical advice.*"
-                - Provide structured info:
-                  1. Medicine Name (brand + generic)
-                  2. Form (tablet, syrup, etc.)
-                  3. Primary Use / Indication
-                  4. Recommended Age Group
-                  5. Typical Dosage Guidance (general, not personalized)
-                  6. Special Instructions (e.g., storage, use after opening if syrup)
-                  7. Common Warnings / Side Effects
-                - Do NOT invent details. If not available, write "Not specified in reliable sources."
-                """
-                final_response = model.generate_content(structured_prompt)
-                final_response.resolve()
-
-                msg.body(final_response.text)
-
+                # Format the new image prompt with the user's caption
+                structured_prompt = PROMPT_IMAGE.format(incoming_msg=incoming_msg)
+                
+                # Generate the response without using the 'tools' parameter
+                response = model.generate_content([structured_prompt, image_parts[0]])
+                response.resolve()
+                msg.body(response.text)
             else:
                 msg.body("Sorry, I could not process the image file.")
-
         else:
             # --- Text Logic ---
             prompt = PROMPT_TEXT.format(incoming_msg=incoming_msg)
@@ -130,6 +104,6 @@ def whatsapp_reply():
     return str(resp)
 
 
-
 if __name__ == "__main__":
     app.run(port=5000, debug=True)
+
