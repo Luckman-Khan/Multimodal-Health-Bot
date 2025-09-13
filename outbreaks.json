@@ -1,0 +1,13 @@
+{
+  "alerts": [
+    {
+      "disease": "Dengue",
+      "district": "Murshidabad",
+      "state": "West Bengal",
+      "message_en": "⚠️ Dengue cases are rising in Murshidabad district. Preventive tip: Sleep under mosquito nets and remove any stagnant water around your home.",
+      "message_hi": "⚠️ मुशिर्दाबाद जिले में डेंगू के मामले बढ़ रहे हैं। बचाव का उपाय: मच्छरदानी में सोएं और अपने घर के आसपास किसी भी रुके हुए पानी को हटा दें।",
+      "message_bn": "⚠️ মুর্শিদাবাদ জেলায় ডেঙ্গুর ঘটনা বাড়ছে। প্রতিরোধমূলক টিপস: মশারির নিচে ঘুমান এবং আপনার বাড়ির চারপাশে জমে থাকা জল সরিয়ে দিন।",
+      "message_or": "⚠️ ମୁର୍ଶିଦାବାଦ ଜିଲ୍ଲାରେ ଡେଙ୍ଗୁ ମାମଲା ବଢୁଛି। ପ୍ରତିରୋଧକ ଟିପ୍ପଣୀ: ମଶାରୀ ତଳେ ଶୁଅନ୍ତୁ ଏବଂ ଆପଣଙ୍କ ଘର ଚାରିପାଖରେ ଥିବା ସ୍ଥିର ପାଣିକୁ ହଟାନ୍ତୁ।"
+    }
+  ]
+}
