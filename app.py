@@ -162,7 +162,7 @@ def whatsapp_reply():
             try:
                 current_lang = detect(incoming_msg)
                 if db and current_lang != stored_lang:
-                    user_doc_ref.set({'language': current_lang}, merge=True)
+                    user_doc_ref.set({'language': current_lang}, merge=_True_)
                     stored_lang = current_lang
             except LangDetectException:
                 pass
