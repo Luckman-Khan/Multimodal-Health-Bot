@@ -219,7 +219,6 @@ def whatsapp_reply():
                 msg.body(responses['no_alert_found'].format(district_name=user_district.capitalize()))
             return str(resp)
 
-        # ... (rest of keyword logic: set district, feedback, etc.) ...
         elif clean_msg.startswith('set district'):
             parts = incoming_msg.strip().split()
             if len(parts) > 2:
@@ -237,13 +236,30 @@ def whatsapp_reply():
         model = genai.GenerativeModel('gemini-1.5-flash-latest')
         
         if media_url:
-            # Image Logic ...
+            # Image Logic
+            image_response = requests.get(media_url, auth=(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN))
+            mime_type = image_response.headers.get('Content-Type')
+            
+            if mime_type and mime_type.startswith('image/'):
+                image_data = image_response.content
+                image_parts = [{"mime_type": mime_type, "data": image_data}]
+                prompt = PROMPT_IMAGE.format(language_name=language_name)
+                full_prompt = [prompt, f"User's text caption: {incoming_msg}", image_parts[0]]
+                response = model.generate_content(full_prompt)
+                response.resolve()
+
+                if response.text and response.text.strip():
+                    msg.body(response.text)
+                else:
+                    print(f"DEBUG: Gemini returned an empty response for image prompt.")
+                    msg.body(responses['error_message'])
+            else:
+                msg.body(responses['image_error'])
         else:
             # Text Logic
             prompt = PROMPT_TEXT.format(language_name=language_name, knowledge_base=knowledge_base, incoming_msg=incoming_msg)
             response = model.generate_content(prompt)
             
-            # NEW: Check for empty response from AI
             if response.text and response.text.strip():
                 msg.body(response.text)
             else:
@@ -252,10 +268,11 @@ def whatsapp_reply():
 
     except Exception as e:
         print(f"An error occurred: {e}")
-        responses = RESPONSES.get(stored_lang, RESPONSES.get('en'))
+        responses = RESPONSES.get(stored_lang, RESPONSES['en'])
         msg.body(responses['error_message'])
 
     return str(resp)    
 
 if __name__ == "__main__":
     app.run(port=5000, debug=True)
+
