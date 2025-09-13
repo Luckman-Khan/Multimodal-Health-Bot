@@ -70,7 +70,13 @@ def whatsapp_reply():
             if mime_type and mime_type.startswith('image/'):
                 image_data = image_response.content
                 image_parts = [{"mime_type": mime_type, "data": image_data}]
-                full_prompt = [PROMPT_IMAGE + "\nUser's text caption: " + incoming_msg, image_parts[0]]
+                if incoming_msg.strip():
+                    user_caption = f"\nUser's text caption: {incoming_msg}"
+                else:
+                    user_caption = "\nNo text caption provided by user."
+
+                full_prompt = [PROMPT_IMAGE + user_caption, image_parts[0]]
+
                 response = model.generate_content(full_prompt, stream=False)
                 response.resolve()
                 msg.body(response.text)
