@@ -143,9 +143,11 @@ def whatsapp_reply():
     
     clean_msg = incoming_msg.strip().lower()
 
+    # --- Default Language Setup ---
+    stored_lang = 'en'
+    
     try:
         # --- Language and State Handling with Memory ---
-        stored_lang = 'en'
         user_state = None
         user_doc_ref = None
         if db:
@@ -162,7 +164,7 @@ def whatsapp_reply():
             try:
                 current_lang = detect(incoming_msg)
                 if db and current_lang != stored_lang:
-                    user_doc_ref.set({'language': current_lang}, merge=_True_)
+                    user_doc_ref.set({'language': current_lang}, merge=True)
                     stored_lang = current_lang
             except LangDetectException:
                 pass
@@ -203,44 +205,42 @@ def whatsapp_reply():
                 if db:
                     user_doc_ref.set({'state': None}, merge=True) # Clear the state after an error
                 msg.body(responses['dob_error'])
+            
             return str(resp)
 
         # --- Keyword Logic ---
         if 'schedule' in clean_msg or 'vaccine' in clean_msg:
             if db:
                 user_doc_ref.set({'state': 'awaiting_dob'}, merge=True)
-            msg.body(responses['vaccine_prompt'])
-            return str(resp)
-            
+                msg.body(responses['vaccine_prompt'])
+            else:
+                msg.body(responses['db_connection_error'])
+
         elif clean_msg == 'alert':
             model = genai.GenerativeModel('gemini-1.5-flash-latest')
             user_district = ""
-            if user_doc and user_doc.exists:
+            if db and user_doc and user_doc.exists:
                 user_district = user_doc.to_dict().get('district', '').lower()
             
-            if not user_district:
+            if not user_district and db:
                  msg.body(responses['no_district_for_alert'])
-                 return str(resp)
-
-            alert_found = None
-            for alert in outbreak_data.get("outbreaks", []):
-                if alert['district'].lower() == user_district:
-                    alert_found = alert
-                    break
-            
-            if alert_found:
-                alert_prompt = f"""
-                Generate a concise health alert in {language_name} based on this data:
-                - Disease: {alert_found['disease']}
-                - Recommendation: {alert_found['recommendation']}
-                Start with a warning emoji (⚠️).
-                """
-                response = model.generate_content(alert_prompt)
-                msg.body(response.text)
+            elif not db:
+                 msg.body(responses['db_connection_error'])
             else:
-                msg.body(responses['no_alert_found'].format(district_name=user_district.capitalize()))
-            return str(resp)
-
+                alert_found = None
+                for alert in outbreak_data.get("outbreaks", []):
+                    if alert['district'].lower() == user_district:
+                        alert_found = alert
+                        break
+                
+                if alert_found:
+                    alert_prompt = f"Generate a concise health alert in {language_name} based on this data: Disease: {alert_found['disease']}, Recommendation: {alert_found['recommendation']}. Start with a warning emoji (⚠️)."
+                    response = model.generate_content(alert_prompt)
+                    if response.text and response.text.strip():
+                        msg.body(response.text)
+                else:
+                    msg.body(responses['no_alert_found'].format(district_name=user_district.capitalize()))
+        
         elif clean_msg.startswith('set district'):
             parts = incoming_msg.strip().split()
             if len(parts) > 2:
@@ -252,8 +252,7 @@ def whatsapp_reply():
                     msg.body(responses['db_connection_error'])
             else:
                 msg.body(responses['provide_district_name'])
-            return str(resp)
-        
+
         elif clean_msg.startswith('feedback'):
             feedback_text = incoming_msg.strip()[len('feedback '):]
             if db and feedback_text:
@@ -265,40 +264,40 @@ def whatsapp_reply():
                 msg.body(responses['feedback_success'])
             else:
                 msg.body(responses['feedback_prompt'])
-            return str(resp)
 
-        # --- AI Processing Logic ---
-        model = genai.GenerativeModel('gemini-1.5-flash-latest')
-        
-        if media_url:
-            image_response = requests.get(media_url, auth=(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN))
-            mime_type = image_response.headers.get('Content-Type')
-            
-            if mime_type and mime_type.startswith('image/'):
-                image_data = image_response.content
-                image_parts = [{"mime_type": mime_type, "data": image_data}]
-                prompt = PROMPT_IMAGE.format(language_name=language_name)
-                full_prompt = [prompt, f"User's text caption: {incoming_msg}", image_parts[0]]
-                response = model.generate_content(full_prompt)
-                response.resolve()
-
+        # --- AI Processing Logic (if no keyword was matched) ---
+        elif not msg.body:
+            model = genai.GenerativeModel('gemini-1.5-flash-latest')
+            if media_url:
+                image_response = requests.get(media_url, auth=(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN))
+                mime_type = image_response.headers.get('Content-Type')
+                
+                if mime_type and mime_type.startswith('image/'):
+                    image_data = image_response.content
+                    image_parts = [{"mime_type": mime_type, "data": image_data}]
+                    prompt = PROMPT_IMAGE.format(language_name=language_name)
+                    full_prompt = [prompt, f"User's text caption: {incoming_msg}", image_parts[0]]
+                    response = model.generate_content(full_prompt)
+                    response.resolve()
+                    if response.text and response.text.strip():
+                        msg.body(response.text)
+                else:
+                    msg.body(responses['image_error'])
+            else:
+                prompt = PROMPT_TEXT.format(language_name=language_name, knowledge_base=knowledge_base, incoming_msg=incoming_msg)
+                response = model.generate_content(prompt)
                 if response.text and response.text.strip():
                     msg.body(response.text)
-                else:
-                    msg.body(responses['error_message'])
-            else:
-                msg.body(responses['image_error'])
-        else:
-            prompt = PROMPT_TEXT.format(language_name=language_name, knowledge_base=knowledge_base, incoming_msg=incoming_msg)
-            response = model.generate_content(prompt)
-            
-            if response.text and response.text.strip():
-                msg.body(response.text)
-            else:
-                msg.body(responses['error_message'])
 
     except Exception as e:
         print(f"An error occurred: {e}")
+        # Use stored_lang determined at the start of the try block for error message language
+        responses = RESPONSES.get(stored_lang, RESPONSES['en'])
+        msg.body(responses['error_message'])
+
+    # --- NEW: Final Fallback to prevent silent failures ---
+    if not msg.body:
+        print("DEBUG: No response was set. Sending default error message.")
         responses = RESPONSES.get(stored_lang, RESPONSES['en'])
         msg.body(responses['error_message'])
 
