@@ -4,6 +4,7 @@ import google.generativeai as genai
 from flask import Flask, request
 from twilio.twiml.messaging_response import MessagingResponse
 from dotenv import load_dotenv
+import json
 
 # Load environment variables
 load_dotenv()
@@ -23,8 +24,14 @@ try:
 except FileNotFoundError:
     knowledge_base = "No knowledge base file found."
 
+# Load mock outbreak data
+try:
+    with open('outbreaks.json', 'r', encoding='utf-8') as f:
+        outbreak_data = json.load(f)
+except FileNotFoundError:
+    outbreak_data = {"alerts": []}
+
 # --- Universal Prompts ---
-# This single prompt will handle all languages for text
 PROMPT_TEXT = f"""
 Your task is to be a helpful AI health assistant.
 First, identify the language of the user's question below (it could be English, Hinglish, Hindi, Bengali, Odia, etc.).
@@ -37,7 +44,6 @@ User's question: "{{incoming_msg}}"
 If the question is not in the knowledge base, respond in the user's language with a message like: 'I can only answer questions about topics in my knowledge base.'
 """
 
-# UPDATED: This prompt now infers the language if no caption is provided
 PROMPT_IMAGE = """
 You are a medical information assistant. Your task is to analyze the user-provided image of a medicine package and provide a structured summary based on your internal knowledge.
 
@@ -67,21 +73,29 @@ def whatsapp_reply():
     msg = resp.message()
 
     try:
+        # --- NEW: Check for the 'alert' keyword ---
+        if incoming_msg.strip().lower() == 'alert':
+            if outbreak_data["alerts"]:
+                # For the demo, we'll just show the first alert.
+                alert = outbreak_data["alerts"][0]
+                # A simple way to provide a multilingual alert
+                alert_message = f"{alert['message_en']}\n\n{alert['message_hi']}\n\n{alert['message_bn']}\n\n{alert['message_or']}"
+                msg.body(alert_message)
+            else:
+                msg.body("There are no new health alerts in your area.")
+            return str(resp)
+
         model = genai.GenerativeModel('gemini-1.5-flash-latest')
         
         if media_url:
-            # --- Image Logic without Grounded Search ---
+            # --- Image Logic ---
             image_response = requests.get(media_url, auth=(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN))
             mime_type = image_response.headers.get('Content-Type')
             
             if mime_type and mime_type.startswith('image/'):
                 image_data = image_response.content
                 image_parts = [{"mime_type": mime_type, "data": image_data}]
-
-                # Combine prompt and caption cleanly
                 full_prompt = [PROMPT_IMAGE, f"User's text caption: {incoming_msg}", image_parts[0]]
-                
-                # Generate the response
                 response = model.generate_content(full_prompt)
                 response.resolve()
                 msg.body(response.text)
