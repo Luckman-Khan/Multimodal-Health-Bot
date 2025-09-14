@@ -5,19 +5,8 @@ from flask import Flask, request
 from twilio.twiml.messaging_response import MessagingResponse
 from dotenv import load_dotenv
 import json
-import firebase_admin
-from firebase_admin import credentials, firestore
-from langdetect import detect, LangDetectException
-
-# --- Firebase Initialization ---
-try:
-    cred = credentials.Certificate("serviceAccountKey.json")
-    firebase_admin.initialize_app(cred)
-    db = firestore.client()
-    print("[DEBUG] Firebase connected successfully.")
-except Exception as e:
-    print(f"[ERROR] Firebase connection failed: {e}")
-    db = None
+from datetime import datetime, timedelta
+from dateutil.parser import parse
 
 # Load environment variables
 load_dotenv()
@@ -30,209 +19,153 @@ TWILIO_ACCOUNT_SID = os.getenv("TWILIO_ACCOUNT_SID")
 TWILIO_AUTH_TOKEN = os.getenv("TWILIO_AUTH_TOKEN")
 genai.configure(api_key=GEMINI_API_KEY)
 
-# Load custom knowledge base
+# Load data files
 try:
     with open('knowledge.txt', 'r', encoding='utf-8') as f:
         knowledge_base = f.read()
-except FileNotFoundError:
-    knowledge_base = "No knowledge base file found."
-
-# Load mock outbreak data
-try:
     with open('outbreaks.json', 'r', encoding='utf-8') as f:
         outbreak_data = json.load(f)
-except FileNotFoundError:
+    with open('vaccine_schedule.json', 'r', encoding='utf-8') as f:
+        vaccine_data = json.load(f)
+except FileNotFoundError as e:
+    print(f"Error loading data file: {e}")
+    knowledge_base = "No knowledge base file found."
     outbreak_data = {"outbreaks": []}
+    vaccine_data = {"schedule": []}
 
-# --- Supported Languages ---
-SUPPORTED_LANGS = ['en', 'hi', 'bn', 'or']
-lang_map = {'en': 'English', 'hi': 'Hindi', 'bn': 'Bengali', 'or': 'Odia'}
 
 # --- Multilingual Static Responses ---
+# Simplified for a stateless bot
 RESPONSES = {
     'en': {
-        'set_district_success': "Thank you! Your district has been set to: {district_name}",
-        'no_district_for_alert': "Please set your district first to receive local alerts. Send: `set district [Your District Name]`",
-        'no_alert_found': "There are no new health alerts for your registered district: {district_name}",
-        'update_district_prompt': "To set or update your location, please send a message in this format:\n\n`set district [Your District Name]`\n\nFor example: `set district Murshidabad`",
-        'provide_district_name': "Please provide a district name. Example: `set district Murshidabad`",
-        'db_connection_error': "Database connection is not available.",
-        'feedback_success': "Thank you for your feedback! It helps us improve.",
-        'feedback_prompt': "Please provide your feedback after the word 'feedback'.",
+        'set_district_success': "Thank you! Your district has been set.",
         'error_message': "Sorry, I encountered an error. Please try again later.",
-        'image_error': "Sorry, I could not process the image file."
+        'vaccine_prompt': "To get a personalized child vaccination schedule, please send your message in this format:\n`schedule dob DD-MM-YYYY`",
+        'dob_error': "Could not understand the date. Please use the format: `schedule dob DD-MM-YYYY`",
+        'schedule_saved': "Here is the upcoming vaccination schedule for your child:"
     },
-    # hi, bn, or same as before...
+    # Add other language translations if needed for static messages
 }
 
-# --- Prompts ---
+# --- Universal Prompts ---
 PROMPT_TEXT = """
 Your task is to be a helpful AI health assistant.
-YOU MUST respond in the following language: {language_name}.
-Base your answer ONLY on the following information from the knowledge base:
+First, identify the language of the user's question (e.g., English, Hinglish, Hindi, Bengali, Odia).
+Then, answer the user's question in that same language.
+Base your answer ONLY on the knowledge base provided below.
 ---
 {knowledge_base}
 ---
 User's question: "{incoming_msg}"
-If the question is not in the knowledge base, respond in {language_name} with a message like: 'I can only answer questions about topics in my knowledge base.'
+If the question is not in the knowledge base, respond in the user's language with a message like: 'I can only answer questions about topics in my knowledge base.'
 """
 
 PROMPT_IMAGE = """
-You are a medical information assistant. Your task is to analyze the user-provided image of a medicine package.
-YOU MUST respond in the following language: {language_name}.
-
-**Response Format:**
-- Always start with a disclaimer in {language_name}: '*I am an AI assistant, not a doctor. Please consult a healthcare professional for medical advice.*'
-- Provide the information in this structured format:
-    1.  **Medicine Name:** (Brand and Generic)
-    2.  **Form:** (Tablet, Syrup, etc.)
-    3.  **Primary Use:**
-    4.  **Recommended Age Group:**
-    5.  **General Dosage Guidance:**
-    6.  **Storage Instructions:**
-    7.  **Common Warnings:**
-- If you do not have reliable information on any point, you MUST state "Information not available in my knowledge base" in {language_name}.
+You are a medical information assistant.
+First, identify the language from the user's text caption. If there is no caption, default to English.
+Then, analyze the image and respond in the identified language.
+IMPORTANT: Start your response with a disclaimer in the identified language: '*I am an AI assistant, not a doctor...*'
+Focus only on medically relevant items.
 """
 
-# --- WhatsApp Handler ---
 @app.route("/whatsapp", methods=['POST'])
 def whatsapp_reply():
-    incoming_msg = request.values.get('Body', '').strip()
+    incoming_msg = request.values.get('Body', '')
     media_url = request.values.get('MediaUrl0')
-    user_phone_number = request.values.get('From')
-
+    
     resp = MessagingResponse()
     msg = resp.message()
-    clean_msg = incoming_msg.lower()
-
-    print(f"\n[DEBUG] Incoming: {incoming_msg} from {user_phone_number}")
-
-    # Default language
-    stored_lang = 'en'
+    
+    clean_msg = incoming_msg.strip().lower()
 
     try:
-        user_doc_ref, user_doc = None, None
-        if db:
-            user_doc_ref = db.collection('users').document(user_phone_number)
-            user_doc = user_doc_ref.get()
-            if user_doc.exists:
-                user_data = user_doc.to_dict()
-                stored_lang = user_data.get('language', 'en')
+        model = genai.GenerativeModel('gemini-1.5-flash-latest')
+        
+        # --- Keyword Logic ---
+        if 'schedule' in clean_msg or 'vaccine' in clean_msg:
+            if 'dob' in clean_msg:
+                try:
+                    dob_str = clean_msg.split('dob')[1].strip()
+                    dob = parse(dob_str, dayfirst=True).date()
+                    
+                    schedule_list = []
+                    for item in vaccine_data['schedule']:
+                        due_date = dob
+                        if 'due_weeks' in item:
+                            due_date += timedelta(weeks=item['due_weeks'])
+                        elif 'due_months' in item:
+                            due_date += timedelta(days=item['due_months'] * 30)
+                        
+                        schedule_list.append({
+                            'name': item['name'],
+                            'due_date': due_date.strftime('%d-%m-%Y'),
+                            'due_text': item['due_text']
+                        })
 
-        # Detect language if not a command
-        is_command = clean_msg.startswith('alert') or clean_msg.startswith('set district') \
-                     or clean_msg.startswith('feedback') or 'update district' in clean_msg \
-                     or 'change district' in clean_msg
+                    response_text = f"{RESPONSES['en']['schedule_saved']}\n\n"
+                    for item in schedule_list:
+                        response_text += f"*{item['due_text']}* ({item['due_date']}):\n- {item['name']}\n\n"
+                    msg.body(response_text)
 
-        if not is_command and incoming_msg:
-            try:
-                current_lang = detect(incoming_msg)
-                if current_lang in SUPPORTED_LANGS and current_lang != stored_lang and db:
-                    user_doc_ref.set({'language': current_lang}, merge=True)
-                    stored_lang = current_lang
-                    print(f"[DEBUG] Language updated to {current_lang}")
-            except LangDetectException:
-                print("[WARN] Could not detect language.")
+                except Exception as e:
+                    print(f"DOB parsing error: {e}")
+                    msg.body(RESPONSES['en']['dob_error'])
+            else:
+                msg.body(RESPONSES['en']['vaccine_prompt'])
 
-        language_name = lang_map.get(stored_lang, 'English')
-        responses = RESPONSES.get(stored_lang, RESPONSES['en'])
-
-        # --- Commands ---
-        if clean_msg.startswith('alert'):
-            model = genai.GenerativeModel('gemini-1.5-flash-latest')
-            user_district = ""
-            if user_doc and user_doc.exists:
-                user_district = user_doc.to_dict().get('district', '').lower()
-
-            if not user_district:
-                msg.body(responses['no_district_for_alert'])
-                return str(resp)
-
-            alert_found = next((a for a in outbreak_data.get("outbreaks", []) 
-                                if a['district'].lower() == user_district), None)
-
+        elif clean_msg == 'alert':
+            alert_found = None
+            for alert in outbreak_data.get("outbreaks", []):
+                if alert['district'].lower() == 'howrah': # Hardcoded for demo
+                    alert_found = alert
+                    break
+            
             if alert_found:
-                alert_prompt = f"""
-                You are a health alert system.
-                Generate a concise and clear health alert message in {language_name}.
-                The alert should be based on this data:
-                - Disease: {alert_found['disease']}
-                - Severity: {alert_found['severity']}
-                - Recommendation: {alert_found['recommendation']}
-                Start the message with ⚠️.
-                """
+                alert_prompt = f"Generate a concise health alert in English based on this data: Disease: {alert_found['disease']}, Recommendation: {alert_found['recommendation']}. Start with a warning emoji (⚠️)."
                 response = model.generate_content(alert_prompt)
                 response.resolve()
-                msg.body(response.text or responses['error_message'])
+                if response.text and response.text.strip():
+                    msg.body(response.text)
+                else:
+                    msg.body(RESPONSES['en']['error_message'])
             else:
-                msg.body(responses['no_alert_found'].format(
-                    district_name=user_district.capitalize()))
-            return str(resp)
-
-        elif 'update district' in clean_msg or 'change district' in clean_msg:
-            msg.body(responses['update_district_prompt'])
-            return str(resp)
+                msg.body("No alerts found for Howrah district.")
 
         elif clean_msg.startswith('set district'):
-            parts = incoming_msg.split()
-            if len(parts) > 2:
-                district_name = " ".join(parts[2:])
-                if db:
-                    user_doc_ref.set({'district': district_name}, merge=True)
-                    msg.body(responses['set_district_success'].format(district_name=district_name))
+            msg.body(RESPONSES['en']['set_district_success'].format(district_name="your district"))
+
+        # --- AI Processing Logic (if no keyword was matched) ---
+        elif not msg.body:
+            if media_url:
+                image_response = requests.get(media_url, auth=(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN))
+                mime_type = image_response.headers.get('Content-Type')
+                
+                if mime_type and mime_type.startswith('image/'):
+                    image_data = image_response.content
+                    image_parts = [{"mime_type": mime_type, "data": image_data}]
+                    full_prompt = [PROMPT_IMAGE + "\nUser's text caption: " + incoming_msg, image_parts[0]]
+                    response = model.generate_content(full_prompt)
+                    response.resolve()
+                    if response.text and response.text.strip():
+                        msg.body(response.text)
                 else:
-                    msg.body(responses['db_connection_error'])
+                    msg.body("Sorry, I could not process the image file.")
             else:
-                msg.body(responses['provide_district_name'])
-            return str(resp)
-
-        elif clean_msg.startswith('feedback'):
-            feedback_text = incoming_msg[len('feedback '):].strip()
-            if db and feedback_text:
-                db.collection('feedback').add({
-                    'user': user_phone_number,
-                    'message': feedback_text,
-                    'timestamp': firestore.SERVER_TIMESTAMP
-                })
-                msg.body(responses['feedback_success'])
-            else:
-                msg.body(responses['feedback_prompt'])
-            return str(resp)
-
-        # --- AI Processing ---
-        model = genai.GenerativeModel('gemini-1.5-flash-latest')
-
-        if media_url:
-            image_response = requests.get(media_url, auth=(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN))
-            mime_type = image_response.headers.get('Content-Type')
-
-            if mime_type and mime_type.startswith('image/'):
-                image_data = image_response.content
-                image_parts = [{"mime_type": mime_type, "data": image_data}]
-                prompt = PROMPT_IMAGE.format(language_name=language_name)
-                full_prompt = [prompt, f"User caption: {incoming_msg}", image_parts[0]]
-                response = model.generate_content(full_prompt)
+                prompt = PROMPT_TEXT.format(knowledge_base=knowledge_base, incoming_msg=incoming_msg)
+                response = model.generate_content(prompt)
                 response.resolve()
-                msg.body(response.text or responses['image_error'])
-            else:
-                msg.body(responses['image_error'])
-        else:
-            prompt = PROMPT_TEXT.format(
-                language_name=language_name,
-                knowledge_base=knowledge_base,
-                incoming_msg=incoming_msg
-            )
-            response = model.generate_content(prompt)
-            response.resolve()
-            msg.body(response.text or responses['error_message'])
+                if response.text and response.text.strip():
+                    msg.body(response.text)
 
     except Exception as e:
-        print(f"[ERROR] Exception: {e}")
-        responses = RESPONSES.get(stored_lang, RESPONSES['en'])
-        msg.body(responses['error_message'])
+        print(f"CRITICAL ERROR in main try block: {e}")
+        msg.body(RESPONSES['en']['error_message'])
+
+    if not msg.body:
+        msg.body(RESPONSES['en']['error_message'])
 
     return str(resp)
 
-
 if __name__ == "__main__":
     app.run(port=5000, debug=True)
+
