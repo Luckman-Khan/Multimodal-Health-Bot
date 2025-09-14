@@ -134,6 +134,9 @@ YOU MUST respond in the following language: {language_name}.
 
 @app.route("/whatsapp", methods=['POST'])
 def whatsapp_reply():
+    # --- THIS IS THE NEW HEARTBEAT LINE ---
+    print("<<<<< HEARTBEAT: WhatsApp message received! >>>>>")
+    
     incoming_msg = request.values.get('Body', '')
     media_url = request.values.get('MediaUrl0')
     user_phone_number = request.values.get('From') 
