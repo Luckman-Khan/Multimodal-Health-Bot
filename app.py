@@ -10,6 +10,7 @@ from firebase_admin import credentials, firestore
 from langdetect import detect, LangDetectException
 from datetime import datetime, timedelta
 from dateutil.parser import parse
+from twilio.rest import Client
 
 # --- Firebase Initialization ---
 try:
@@ -31,6 +32,8 @@ GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 TWILIO_ACCOUNT_SID = os.getenv("TWILIO_ACCOUNT_SID")
 TWILIO_AUTH_TOKEN = os.getenv("TWILIO_AUTH_TOKEN")
 genai.configure(api_key=GEMINI_API_KEY)
+twilio_client = Client(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
+
 
 # Load data files
 try:
@@ -62,7 +65,8 @@ RESPONSES = {
         'image_error': "Sorry, I could not process the image file.",
         'vaccine_prompt': "To get a personalized child vaccination schedule, please provide the date of birth in this format: DD-MM-YYYY",
         'dob_error': "Incorrect format. Please start again by sending 'schedule' or 'vaccine'.",
-        'schedule_saved': "Here is the upcoming vaccination schedule for your child. I will also send you a reminder before each due date."
+        'schedule_saved': "Here is the upcoming vaccination schedule for your child. I will also send you a reminder before each due date.",
+        'thinking': "Thinking..."
     },
     'hi': {
         'set_district_success': "धन्यवाद! आपका जिला {district_name} पर सेट कर दिया गया है।",
@@ -77,7 +81,8 @@ RESPONSES = {
         'image_error': "क्षमा करें, मैं छवि फ़ाइल को संसाधित नहीं कर सका।",
         'vaccine_prompt': "बच्चे का व्यक्तिगत टीकाकरण कार्यक्रम प्राप्त करने के लिए, कृपया इस प्रारूप में जन्म तिथि प्रदान करें: DD-MM-YYYY",
         'dob_error': "गलत प्रारूप। कृपया 'schedule' या 'vaccine' भेजकर फिर से शुरू करें।",
-        'schedule_saved': "यहाँ आपके बच्चे का आगामी टीकाकरण कार्यक्रम है। मैं आपको प्रत्येक नियत तारीख से पहले एक अनुस्मारक भी भेजूंगा।"
+        'schedule_saved': "यहाँ आपके बच्चे का आगामी टीकाकरण कार्यक्रम है। मैं आपको प्रत्येक नियत तारीख से पहले एक अनुस्मारक भी भेजूंगा।",
+        'thinking': "सोच रहा हूँ..."
     },
     'bn': {
         'set_district_success': "ধন্যবাদ! আপনার জেলা {district_name} হিসাবে সেট করা হয়েছে।",
@@ -92,7 +97,8 @@ RESPONSES = {
         'image_error': "দুঃখিত, আমি ছবির ফাইলটি প্রক্রিয়া করতে পারিনি।",
         'vaccine_prompt': "শিশুর ব্যক্তিগত টিকাদানের সময়সূচী পেতে, অনুগ্রহ করে এই ফর্ম্যাটে জন্ম তারিখ দিন: DD-MM-YYYY",
         'dob_error': "ভুল ফর্ম্যাট। অনুগ্রহ করে 'schedule' বা 'vaccine' পাঠিয়ে আবার শুরু করুন।",
-        'schedule_saved': "এখানে আপনার সন্তানের আসন্ন টিকাদানের সময়সূচী দেওয়া হল। আমি প্রতিটি নির্ধারিত তারিখের আগে আপনাকে একটি অনুস্মারকও পাঠাব।"
+        'schedule_saved': "এখানে আপনার সন্তানের আসন্ন টিকাদানের সময়সূচী দেওয়া হল। আমি প্রতিটি নির্ধারিত তারিখের আগে আপনাকে একটি অনুস্মারকও পাঠাব।",
+        'thinking': "ভাবছি..."
     },
     'or': {
         'set_district_success': "ଧନ୍ୟବାଦ! ଆପଣଙ୍କ ଜିଲ୍ଲା {district_name} କୁ ସେଟ୍ କରାଯାଇଛି।",
@@ -107,7 +113,8 @@ RESPONSES = {
         'image_error': "କ୍ଷମା କରନ୍ତୁ, ମୁଁ ଇମେଜ୍ ଫାଇଲ୍ ପ୍ରକ୍ରିୟାକରଣ କରିପାରିଲି ନାହିଁ।",
         'vaccine_prompt': "ଶିଶୁର ବ୍ୟକ୍ତିଗତ ଟୀକାକରଣ କାର୍ଯ୍ୟସୂଚୀ ପାଇବାକୁ, ଦୟାକରି ଏହି ଫର୍ମାଟରେ ଜନ୍ମ ତାରିଖ ଦିଅନ୍ତୁ: DD-MM-YYYY",
         'dob_error': "ଭୁଲ ଫର୍ମାଟ୍। ଦୟାକରି 'schedule' କିମ୍ବା 'vaccine' ପଠାଇ ପୁଣିଥରେ ଆରମ୍ଭ କରନ୍ତୁ।",
-        'schedule_saved': "ଏଠାରେ ଆପଣଙ୍କ ଶିଶୁର ଆଗାମୀ ଟୀକାକରଣ କାର୍ଯ୍ୟସୂଚୀ ଅଛି। ମୁଁ ଆପଣଙ୍କୁ ପ୍ରତ୍ୟେକ ନିର୍ଦ୍ଧାରିତ ତାରିଖ ପୂର୍ବରୁ ଏକ ସ୍ମାରକ ମଧ୍ୟ ପଠାଇବି।"
+        'schedule_saved': "ଏଠାରେ ଆପଣଙ୍କ ଶିଶୁର ଆଗାମୀ ଟୀକାକରଣ କାର୍ଯ୍ୟସୂଚୀ ଅଛି। ମୁଁ ଆପଣଙ୍କୁ ପ୍ରତ୍ୟେକ ନିର୍ଦ୍ଧାରିତ ତାରିଖ ପୂର୍ବରୁ ଏକ ସ୍ମାରକ ମଧ୍ୟ ପଠାଇବି।",
+        'thinking': "ଚିନ୍ତା କରୁଛି..."
     }
 }
 
@@ -132,15 +139,28 @@ YOU MUST respond in the following language: {language_name}.
 - If information is not available, state that in {language_name}.
 """
 
+def send_final_message(to_number, from_number, body_text):
+    """Function to send a final message using the Twilio REST API."""
+    try:
+        twilio_client.messages.create(
+            from_=from_number,
+            body=body_text,
+            to=to_number
+        )
+        print("Successfully sent final message.")
+    except Exception as e:
+        print(f"Error sending final Twilio message: {e}")
+
 @app.route("/whatsapp", methods=['POST'])
 def whatsapp_reply():
     print("\n--- NEW REQUEST ---")
-    print(f"[{datetime.now()}] HEARTBEAT: WhatsApp message received!")
     
     incoming_msg = request.values.get('Body', '')
     media_url = request.values.get('MediaUrl0')
-    user_phone_number = request.values.get('From') 
-    print(f"From: {user_phone_number}, Message: '{incoming_msg}'")
+    user_phone_number = request.values.get('From')
+    twilio_phone_number = request.values.get('To')
+    
+    print(f"From: {user_phone_number}, To: {twilio_phone_number}, Message: '{incoming_msg}'")
 
     resp = MessagingResponse()
     msg = resp.message()
@@ -150,202 +170,139 @@ def whatsapp_reply():
     # --- Default Language Setup ---
     stored_lang = 'en'
     
-    try:
-        # --- Language and State Handling with Memory ---
-        print("Step 1: Checking database for user state and language...")
-        user_state = None
-        user_doc_ref = None
-        if db:
-            user_doc_ref = db.collection('users').document(user_phone_number)
-            user_doc = user_doc_ref.get()
-            if user_doc.exists:
-                user_data = user_doc.to_dict()
-                stored_lang = user_data.get('language', 'en')
-                user_state = user_data.get('state')
-                print(f"User found in DB. Stored Lang: {stored_lang}, State: {user_state}")
-            else:
-                print("New user. Using default language 'en'.")
-        else:
-            print("Database not connected. Using default language 'en'.")
+    # --- Language and State Handling with Memory ---
+    user_state = None
+    user_doc_ref = None
+    if db:
+        user_doc_ref = db.collection('users').document(user_phone_number)
+        user_doc = user_doc_ref.get()
+        if user_doc.exists:
+            user_data = user_doc.to_dict()
+            stored_lang = user_data.get('language', 'en')
+            user_state = user_data.get('state')
+    
+    responses = RESPONSES.get(stored_lang, RESPONSES['en'])
 
-        # --- NEW: Language Whitelist ---
-        supported_langs = ['en', 'hi', 'bn', 'or']
-        is_command = any(keyword in clean_msg for keyword in ['alert', 'district', 'feedback', 'schedule', 'vaccine'])
-        print(f"Is command: {is_command}")
+    # --- Keyword Logic that provides instant response ---
+    if 'schedule' in clean_msg or 'vaccine' in clean_msg:
+        if db:
+            user_doc_ref.set({'state': 'awaiting_dob'}, merge=True)
+            msg.body(responses['vaccine_prompt'])
+        else:
+            msg.body(responses['db_connection_error'])
+        return str(resp)
+
+    # For other keywords and AI processing, send a "thinking" message first
+    msg.body(responses['thinking'])
+
+    # Process the actual request in a separate thread or after sending the initial response
+    # This is a simplified approach for the hackathon
+    
+    final_response_body = ""
+
+    try:
+        is_command = any(keyword in clean_msg for keyword in ['alert', 'district', 'feedback'])
 
         if not is_command and incoming_msg and user_state is None:
             try:
-                detected_lang = detect(incoming_msg)
-                # Only update if the detected language is one we support
-                if detected_lang in supported_langs and db and detected_lang != stored_lang:
-                    print(f"Language changed from {stored_lang} to {detected_lang}. Updating DB.")
-                    user_doc_ref.set({'language': detected_lang}, merge=True)
-                    stored_lang = detected_lang
-                else:
-                    print(f"Detected '{detected_lang}', but it's not in the whitelist or is same as stored. No update.")
+                current_lang = detect(incoming_msg)
+                if db and current_lang != stored_lang:
+                    user_doc_ref.set({'language': current_lang}, merge=True)
+                    stored_lang = current_lang
             except LangDetectException:
-                print("Language detection failed. Using stored language.")
                 pass
         
         lang_map = {'en': 'English', 'hi': 'Hindi', 'bn': 'Bengali', 'or': 'Odia'}
         language_name = lang_map.get(stored_lang, 'English')
-        responses = RESPONSES.get(stored_lang, RESPONSES['en'])
-        print(f"Final language for response: {language_name}")
-
-        # --- State-Based Logic: Awaiting DOB ---
+        
         if user_state == 'awaiting_dob':
-            print("Step 2: Handling 'awaiting_dob' state...")
             try:
                 dob = parse(incoming_msg.strip(), dayfirst=True).date()
-                print(f"Successfully parsed DOB: {dob}")
-                
                 schedule_list = []
                 for item in vaccine_data['schedule']:
-                    due_date = dob
-                    if 'due_weeks' in item:
-                        due_date += timedelta(weeks=item['due_weeks'])
-                    elif 'due_months' in item:
-                        due_date += timedelta(days=item['due_months'] * 30)
-                    
+                    due_date = dob + timedelta(weeks=item.get('due_weeks', 0), days=item.get('due_months', 0) * 30)
                     schedule_list.append({
                         'name': item['name'],
                         'due_date': due_date.strftime('%d-%m-%Y'),
                         'due_text': item['due_text']
                     })
-
                 if db:
-                    print("Saving schedule to DB and clearing state.")
                     user_doc_ref.set({'vaccine_schedule': schedule_list, 'dob': str(dob), 'state': None}, merge=True)
-
                 response_text = f"{responses['schedule_saved']}\n\n"
                 for item in schedule_list:
                     response_text += f"*{item['due_text']}* ({item['due_date']}):\n- {item['name']}\n\n"
-                msg.body(response_text)
-
+                final_response_body = response_text
             except Exception as e:
-                print(f"DOB parsing error from state: {e}")
                 if db:
-                    print("Clearing 'awaiting_dob' state due to error.")
-                    user_doc_ref.set({'state': None}, merge=True) 
-                msg.body(responses['dob_error'])
-            
-            return str(resp)
-
-        # --- Keyword Logic ---
-        print("Step 2: Checking for keywords...")
-        if 'schedule' in clean_msg or 'vaccine' in clean_msg:
-            print("Keyword 'schedule' detected. Setting state to 'awaiting_dob'.")
-            if db:
-                user_doc_ref.set({'state': 'awaiting_dob'}, merge=True)
-                msg.body(responses['vaccine_prompt'])
-            else:
-                msg.body(responses['db_connection_error'])
-            return str(resp)
+                    user_doc_ref.set({'state': None}, merge=True)
+                final_response_body = responses['dob_error']
 
         elif clean_msg == 'alert':
-            print("Keyword 'alert' detected.")
             model = genai.GenerativeModel('gemini-1.5-flash-latest')
-            user_district = ""
-            if db and user_doc and user_doc.exists:
-                user_district = user_doc.to_dict().get('district', '').lower()
-            
+            user_district = user_doc.to_dict().get('district', '').lower() if user_doc and user_doc.exists else ""
             if not user_district and db:
-                 msg.body(responses['no_district_for_alert'])
+                 final_response_body = responses['no_district_for_alert']
             elif not db:
-                 msg.body(responses['db_connection_error'])
+                 final_response_body = responses['db_connection_error']
             else:
-                alert_found = None
-                for alert in outbreak_data.get("outbreaks", []):
-                    if alert['district'].lower() == user_district:
-                        alert_found = alert
-                        break
-                
+                alert_found = next((alert for alert in outbreak_data.get("outbreaks", []) if alert['district'].lower() == user_district), None)
                 if alert_found:
-                    alert_prompt = f"Generate a concise health alert in {language_name} based on this data: Disease: {alert_found['disease']}, Recommendation: {alert_found['recommendation']}. Start with a warning emoji (⚠️)."
+                    alert_prompt = f"Generate a health alert in {language_name} for {alert_found['disease']} with this recommendation: {alert_found['recommendation']}. Start with ⚠️."
                     response = model.generate_content(alert_prompt)
                     response.resolve()
-                    if response.text and response.text.strip():
-                        msg.body(response.text)
-                    else:
-                        msg.body(responses['error_message'])
+                    final_response_body = response.text or responses['error_message']
                 else:
-                    msg.body(responses['no_alert_found'].format(district_name=user_district.capitalize()))
-            return str(resp)
+                    final_response_body = responses['no_alert_found'].format(district_name=user_district.capitalize())
         
         elif clean_msg.startswith('set district'):
-            print("Keyword 'set district' detected.")
             parts = incoming_msg.strip().split()
             if len(parts) > 2:
                 district_name = " ".join(parts[2:])
                 if db:
                     user_doc_ref.set({'district': district_name}, merge=True)
-                    msg.body(responses['set_district_success'].format(district_name=district_name))
+                    final_response_body = responses['set_district_success'].format(district_name=district_name)
                 else:
-                    msg.body(responses['db_connection_error'])
+                    final_response_body = responses['db_connection_error']
             else:
-                msg.body(responses['provide_district_name'])
-            return str(resp)
+                final_response_body = responses['provide_district_name']
 
         elif clean_msg.startswith('feedback'):
-            print("Keyword 'feedback' detected.")
             feedback_text = incoming_msg.strip()[len('feedback '):]
             if db and feedback_text:
-                db.collection('feedback').add({
-                    'user': user_phone_number,
-                    'message': feedback_text,
-                    'timestamp': firestore.SERVER_TIMESTAMP
-                })
-                msg.body(responses['feedback_success'])
+                db.collection('feedback').add({'user': user_phone_number, 'message': feedback_text, 'timestamp': firestore.SERVER_TIMESTAMP})
+                final_response_body = responses['feedback_success']
             else:
-                msg.body(responses['feedback_prompt'])
-            return str(resp)
+                final_response_body = responses['feedback_prompt']
 
-        # --- AI Processing Logic (if no keyword was matched) ---
-        print("Step 3: No keyword matched. Proceeding to AI processing.")
-        model = genai.GenerativeModel('gemini-1.5-flash-latest')
-        if media_url:
-            print("Image detected. Preparing for image analysis.")
-            image_response = requests.get(media_url, auth=(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN))
-            mime_type = image_response.headers.get('Content-Type')
-            
-            if mime_type and mime_type.startswith('image/'):
-                image_data = image_response.content
-                image_parts = [{"mime_type": mime_type, "data": image_data}]
-                prompt = PROMPT_IMAGE.format(language_name=language_name)
-                full_prompt = [prompt, f"User's text caption: {incoming_msg}", image_parts[0]]
-                response = model.generate_content(full_prompt)
-                response.resolve()
-                if response.text and response.text.strip():
-                    msg.body(response.text)
+        elif not final_response_body:
+            model = genai.GenerativeModel('gemini-1.5-flash-latest')
+            if media_url:
+                image_response = requests.get(media_url, auth=(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN))
+                mime_type = image_response.headers.get('Content-Type')
+                if mime_type and mime_type.startswith('image/'):
+                    image_data = image_response.content
+                    image_parts = [{"mime_type": mime_type, "data": image_data}]
+                    prompt = PROMPT_IMAGE.format(language_name=language_name)
+                    full_prompt = [prompt, f"User's text caption: {incoming_msg}", image_parts[0]]
+                    response = model.generate_content(full_prompt)
+                    response.resolve()
+                    final_response_body = response.text or responses['error_message']
                 else:
-                    msg.body(responses['error_message'])
+                    final_response_body = responses['image_error']
             else:
-                msg.body(responses['image_error'])
-        else:
-            print("Text detected. Preparing for text analysis.")
-            prompt = PROMPT_TEXT.format(language_name=language_name, knowledge_base=knowledge_base, incoming_msg=incoming_msg)
-            print("Sending text prompt to Gemini...")
-            response = model.generate_content(prompt)
-            response.resolve()
-            print(f"DEBUG: Raw AI Text Response: {response.text}")
-            if response.text and response.text.strip():
-                msg.body(response.text)
-            else: 
-                msg.body(responses['error_message'])
-
+                prompt = PROMPT_TEXT.format(language_name=language_name, knowledge_base=knowledge_base, incoming_msg=incoming_msg)
+                response = model.generate_content(prompt)
+                response.resolve()
+                final_response_body = response.text or responses['error_message']
+    
     except Exception as e:
         print(f"CRITICAL ERROR in main try block: {e}")
-        responses = RESPONSES.get(stored_lang, RESPONSES['en'])
-        msg.body(responses['error_message'])
+        final_response_body = responses['error_message']
 
-    # --- Final Fallback to prevent silent failures ---
-    if not msg.body:
-        print("FINAL FALLBACK: No response was set. Sending default error message.")
-        responses = RESPONSES.get(stored_lang, RESPONSES['en'])
-        msg.body(responses['error_message'])
+    if final_response_body:
+        send_final_message(user_phone_number, twilio_phone_number, final_response_body)
 
-    print("--- END REQUEST ---\n")
-    return str(resp)    
+    return str(resp)
 
 if __name__ == "__main__":
     app.run(port=5000, debug=True)
