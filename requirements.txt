@@ -4,10 +4,8 @@ google-generativeai
 requests
 python-dotenv
 gunicorn
-<<<<<<< HEAD
 langdetect
 python-dateutil
-=======
 firebase-admin
 langdetect
->>>>>>> parent of 6d07387 (dateutil)
+
