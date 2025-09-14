@@ -10,7 +10,6 @@ from firebase_admin import credentials, firestore
 from langdetect import detect, LangDetectException
 from datetime import datetime, timedelta
 from dateutil.parser import parse
-from twilio.rest import Client
 
 # --- Firebase Initialization ---
 try:
@@ -32,8 +31,6 @@ GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 TWILIO_ACCOUNT_SID = os.getenv("TWILIO_ACCOUNT_SID")
 TWILIO_AUTH_TOKEN = os.getenv("TWILIO_AUTH_TOKEN")
 genai.configure(api_key=GEMINI_API_KEY)
-twilio_client = Client(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
-
 
 # Load data files
 try:
@@ -65,8 +62,7 @@ RESPONSES = {
         'image_error': "Sorry, I could not process the image file.",
         'vaccine_prompt': "To get a personalized child vaccination schedule, please provide the date of birth in this format: DD-MM-YYYY",
         'dob_error': "Incorrect format. Please start again by sending 'schedule' or 'vaccine'.",
-        'schedule_saved': "Here is the upcoming vaccination schedule for your child. I will also send you a reminder before each due date.",
-        'thinking': "Thinking..."
+        'schedule_saved': "Here is the upcoming vaccination schedule for your child. I will also send you a reminder before each due date."
     },
     'hi': {
         'set_district_success': "धन्यवाद! आपका जिला {district_name} पर सेट कर दिया गया है।",
@@ -81,8 +77,7 @@ RESPONSES = {
         'image_error': "क्षमा करें, मैं छवि फ़ाइल को संसाधित नहीं कर सका।",
         'vaccine_prompt': "बच्चे का व्यक्तिगत टीकाकरण कार्यक्रम प्राप्त करने के लिए, कृपया इस प्रारूप में जन्म तिथि प्रदान करें: DD-MM-YYYY",
         'dob_error': "गलत प्रारूप। कृपया 'schedule' या 'vaccine' भेजकर फिर से शुरू करें।",
-        'schedule_saved': "यहाँ आपके बच्चे का आगामी टीकाकरण कार्यक्रम है। मैं आपको प्रत्येक नियत तारीख से पहले एक अनुस्मारक भी भेजूंगा।",
-        'thinking': "सोच रहा हूँ..."
+        'schedule_saved': "यहाँ आपके बच्चे का आगामी टीकाकरण कार्यक्रम है। मैं आपको प्रत्येक नियत तारीख से पहले एक अनुस्मारक भी भेजूंगा।"
     },
     'bn': {
         'set_district_success': "ধন্যবাদ! আপনার জেলা {district_name} হিসাবে সেট করা হয়েছে।",
@@ -97,8 +92,7 @@ RESPONSES = {
         'image_error': "দুঃখিত, আমি ছবির ফাইলটি প্রক্রিয়া করতে পারিনি।",
         'vaccine_prompt': "শিশুর ব্যক্তিগত টিকাদানের সময়সূচী পেতে, অনুগ্রহ করে এই ফর্ম্যাটে জন্ম তারিখ দিন: DD-MM-YYYY",
         'dob_error': "ভুল ফর্ম্যাট। অনুগ্রহ করে 'schedule' বা 'vaccine' পাঠিয়ে আবার শুরু করুন।",
-        'schedule_saved': "এখানে আপনার সন্তানের আসন্ন টিকাদানের সময়সূচী দেওয়া হল। আমি প্রতিটি নির্ধারিত তারিখের আগে আপনাকে একটি অনুস্মারকও পাঠাব।",
-        'thinking': "ভাবছি..."
+        'schedule_saved': "এখানে আপনার সন্তানের আসন্ন টিকাদানের সময়সূচী দেওয়া হল। আমি প্রতিটি নির্ধারিত তারিখের আগে আপনাকে একটি অনুস্মারকও পাঠাব।"
     },
     'or': {
         'set_district_success': "ଧନ୍ୟବାଦ! ଆପଣଙ୍କ ଜିଲ୍ଲା {district_name} କୁ ସେଟ୍ କରାଯାଇଛି।",
@@ -113,8 +107,7 @@ RESPONSES = {
         'image_error': "କ୍ଷମା କରନ୍ତୁ, ମୁଁ ଇମେଜ୍ ଫାଇଲ୍ ପ୍ରକ୍ରିୟାକରଣ କରିପାରିଲି ନାହିଁ।",
         'vaccine_prompt': "ଶିଶୁର ବ୍ୟକ୍ତିଗତ ଟୀକାକରଣ କାର୍ଯ୍ୟସୂଚୀ ପାଇବାକୁ, ଦୟାକରି ଏହି ଫର୍ମାଟରେ ଜନ୍ମ ତାରିଖ ଦିଅନ୍ତୁ: DD-MM-YYYY",
         'dob_error': "ଭୁଲ ଫର୍ମାଟ୍। ଦୟାକରି 'schedule' କିମ୍ବା 'vaccine' ପଠାଇ ପୁଣିଥରେ ଆରମ୍ଭ କରନ୍ତୁ।",
-        'schedule_saved': "ଏଠାରେ ଆପଣଙ୍କ ଶିଶୁର ଆଗାମୀ ଟୀକାକରଣ କାର୍ଯ୍ୟସୂଚୀ ଅଛି। ମୁଁ ଆପଣଙ୍କୁ ପ୍ରତ୍ୟେକ ନିର୍ଦ୍ଧାରିତ ତାରିଖ ପୂର୍ବରୁ ଏକ ସ୍ମାରକ ମଧ୍ୟ ପଠାଇବି।",
-        'thinking': "ଚିନ୍ତା କରୁଛି..."
+        'schedule_saved': "ଏଠାରେ ଆପଣଙ୍କ ଶିଶୁର ଆଗାମୀ ଟୀକାକରଣ କାର୍ଯ୍ୟସୂଚୀ ଅଛି। ମୁଁ ଆପଣଙ୍କୁ ପ୍ରତ୍ୟେକ ନିର୍ଦ୍ଧାରିତ ତାରିଖ ପୂର୍ବରୁ ଏକ ସ୍ମାରକ ମଧ୍ୟ ପଠାଇବି।"
     }
 }
 
@@ -139,28 +132,11 @@ YOU MUST respond in the following language: {language_name}.
 - If information is not available, state that in {language_name}.
 """
 
-def send_final_message(to_number, from_number, body_text):
-    """Function to send a final message using the Twilio REST API."""
-    try:
-        twilio_client.messages.create(
-            from_=from_number,
-            body=body_text,
-            to=to_number
-        )
-        print("Successfully sent final message.")
-    except Exception as e:
-        print(f"Error sending final Twilio message: {e}")
-
 @app.route("/whatsapp", methods=['POST'])
 def whatsapp_reply():
-    print("\n--- NEW REQUEST ---")
-    
     incoming_msg = request.values.get('Body', '')
     media_url = request.values.get('MediaUrl0')
-    user_phone_number = request.values.get('From')
-    twilio_phone_number = request.values.get('To')
-    
-    print(f"From: {user_phone_number}, To: {twilio_phone_number}, Message: '{incoming_msg}'")
+    user_phone_number = request.values.get('From') 
 
     resp = MessagingResponse()
     msg = resp.message()
@@ -170,38 +146,19 @@ def whatsapp_reply():
     # --- Default Language Setup ---
     stored_lang = 'en'
     
-    # --- Language and State Handling with Memory ---
-    user_state = None
-    user_doc_ref = None
-    if db:
-        user_doc_ref = db.collection('users').document(user_phone_number)
-        user_doc = user_doc_ref.get()
-        if user_doc.exists:
-            user_data = user_doc.to_dict()
-            stored_lang = user_data.get('language', 'en')
-            user_state = user_data.get('state')
-    
-    responses = RESPONSES.get(stored_lang, RESPONSES['en'])
-
-    # --- Keyword Logic that provides instant response ---
-    if 'schedule' in clean_msg or 'vaccine' in clean_msg:
-        if db:
-            user_doc_ref.set({'state': 'awaiting_dob'}, merge=True)
-            msg.body(responses['vaccine_prompt'])
-        else:
-            msg.body(responses['db_connection_error'])
-        return str(resp)
-
-    # For other keywords and AI processing, send a "thinking" message first
-    msg.body(responses['thinking'])
-
-    # Process the actual request in a separate thread or after sending the initial response
-    # This is a simplified approach for the hackathon
-    
-    final_response_body = ""
-
     try:
-        is_command = any(keyword in clean_msg for keyword in ['alert', 'district', 'feedback'])
+        # --- Language and State Handling with Memory ---
+        user_state = None
+        user_doc_ref = None
+        if db:
+            user_doc_ref = db.collection('users').document(user_phone_number)
+            user_doc = user_doc_ref.get()
+            if user_doc.exists:
+                user_data = user_doc.to_dict()
+                stored_lang = user_data.get('language', 'en')
+                user_state = user_data.get('state')
+
+        is_command = any(keyword in clean_msg for keyword in ['alert', 'district', 'feedback', 'schedule', 'vaccine'])
 
         if not is_command and incoming_msg and user_state is None:
             try:
@@ -214,45 +171,78 @@ def whatsapp_reply():
         
         lang_map = {'en': 'English', 'hi': 'Hindi', 'bn': 'Bengali', 'or': 'Odia'}
         language_name = lang_map.get(stored_lang, 'English')
-        
+        responses = RESPONSES.get(stored_lang, RESPONSES['en'])
+
+        # --- State-Based Logic: Awaiting DOB ---
         if user_state == 'awaiting_dob':
             try:
                 dob = parse(incoming_msg.strip(), dayfirst=True).date()
+                
                 schedule_list = []
                 for item in vaccine_data['schedule']:
-                    due_date = dob + timedelta(weeks=item.get('due_weeks', 0), days=item.get('due_months', 0) * 30)
+                    due_date = dob
+                    if 'due_weeks' in item:
+                        due_date += timedelta(weeks=item['due_weeks'])
+                    elif 'due_months' in item:
+                        due_date += timedelta(days=item['due_months'] * 30)
+                    
                     schedule_list.append({
                         'name': item['name'],
                         'due_date': due_date.strftime('%d-%m-%Y'),
                         'due_text': item['due_text']
                     })
+
                 if db:
                     user_doc_ref.set({'vaccine_schedule': schedule_list, 'dob': str(dob), 'state': None}, merge=True)
+
                 response_text = f"{responses['schedule_saved']}\n\n"
                 for item in schedule_list:
                     response_text += f"*{item['due_text']}* ({item['due_date']}):\n- {item['name']}\n\n"
-                final_response_body = response_text
+                msg.body(response_text)
+
             except Exception as e:
+                print(f"DOB parsing error from state: {e}")
                 if db:
-                    user_doc_ref.set({'state': None}, merge=True)
-                final_response_body = responses['dob_error']
+                    user_doc_ref.set({'state': None}, merge=True) # Clear the state after an error
+                msg.body(responses['dob_error'])
+            
+            return str(resp)
+
+        # --- Keyword Logic ---
+        if 'schedule' in clean_msg or 'vaccine' in clean_msg:
+            if db:
+                user_doc_ref.set({'state': 'awaiting_dob'}, merge=True)
+                msg.body(responses['vaccine_prompt'])
+            else:
+                msg.body(responses['db_connection_error'])
 
         elif clean_msg == 'alert':
             model = genai.GenerativeModel('gemini-1.5-flash-latest')
-            user_district = user_doc.to_dict().get('district', '').lower() if user_doc and user_doc.exists else ""
+            user_district = ""
+            if db and user_doc and user_doc.exists:
+                user_district = user_doc.to_dict().get('district', '').lower()
+            
             if not user_district and db:
-                 final_response_body = responses['no_district_for_alert']
+                 msg.body(responses['no_district_for_alert'])
             elif not db:
-                 final_response_body = responses['db_connection_error']
+                 msg.body(responses['db_connection_error'])
             else:
-                alert_found = next((alert for alert in outbreak_data.get("outbreaks", []) if alert['district'].lower() == user_district), None)
+                alert_found = None
+                for alert in outbreak_data.get("outbreaks", []):
+                    if alert['district'].lower() == user_district:
+                        alert_found = alert
+                        break
+                
                 if alert_found:
-                    alert_prompt = f"Generate a health alert in {language_name} for {alert_found['disease']} with this recommendation: {alert_found['recommendation']}. Start with ⚠️."
+                    alert_prompt = f"Generate a concise health alert in {language_name} based on this data: Disease: {alert_found['disease']}, Recommendation: {alert_found['recommendation']}. Start with a warning emoji (⚠️)."
                     response = model.generate_content(alert_prompt)
-                    response.resolve()
-                    final_response_body = response.text or responses['error_message']
+                    response.resolve() 
+                    if response.text and response.text.strip():
+                        msg.body(response.text)
+                    else: 
+                        msg.body(responses['error_message'])
                 else:
-                    final_response_body = responses['no_alert_found'].format(district_name=user_district.capitalize())
+                    msg.body(responses['no_alert_found'].format(district_name=user_district.capitalize()))
         
         elif clean_msg.startswith('set district'):
             parts = incoming_msg.strip().split()
@@ -260,25 +250,31 @@ def whatsapp_reply():
                 district_name = " ".join(parts[2:])
                 if db:
                     user_doc_ref.set({'district': district_name}, merge=True)
-                    final_response_body = responses['set_district_success'].format(district_name=district_name)
+                    msg.body(responses['set_district_success'].format(district_name=district_name))
                 else:
-                    final_response_body = responses['db_connection_error']
+                    msg.body(responses['db_connection_error'])
             else:
-                final_response_body = responses['provide_district_name']
+                msg.body(responses['provide_district_name'])
 
         elif clean_msg.startswith('feedback'):
             feedback_text = incoming_msg.strip()[len('feedback '):]
             if db and feedback_text:
-                db.collection('feedback').add({'user': user_phone_number, 'message': feedback_text, 'timestamp': firestore.SERVER_TIMESTAMP})
-                final_response_body = responses['feedback_success']
+                db.collection('feedback').add({
+                    'user': user_phone_number,
+                    'message': feedback_text,
+                    'timestamp': firestore.SERVER_TIMESTAMP
+                })
+                msg.body(responses['feedback_success'])
             else:
-                final_response_body = responses['feedback_prompt']
+                msg.body(responses['feedback_prompt'])
 
-        elif not final_response_body:
+        # --- AI Processing Logic (if no keyword was matched) ---
+        elif not msg.body:
             model = genai.GenerativeModel('gemini-1.5-flash-latest')
             if media_url:
                 image_response = requests.get(media_url, auth=(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN))
                 mime_type = image_response.headers.get('Content-Type')
+                
                 if mime_type and mime_type.startswith('image/'):
                     image_data = image_response.content
                     image_parts = [{"mime_type": mime_type, "data": image_data}]
@@ -286,23 +282,33 @@ def whatsapp_reply():
                     full_prompt = [prompt, f"User's text caption: {incoming_msg}", image_parts[0]]
                     response = model.generate_content(full_prompt)
                     response.resolve()
-                    final_response_body = response.text or responses['error_message']
+                    if response.text and response.text.strip():
+                        msg.body(response.text)
+                    else: 
+                        msg.body(responses['error_message'])
                 else:
-                    final_response_body = responses['image_error']
+                    msg.body(responses['image_error'])
             else:
                 prompt = PROMPT_TEXT.format(language_name=language_name, knowledge_base=knowledge_base, incoming_msg=incoming_msg)
                 response = model.generate_content(prompt)
-                response.resolve()
-                final_response_body = response.text or responses['error_message']
-    
+                response.resolve() 
+                if response.text and response.text.strip():
+                    msg.body(response.text)
+                else: 
+                    msg.body(responses['error_message'])
+
     except Exception as e:
-        print(f"CRITICAL ERROR in main try block: {e}")
-        final_response_body = responses['error_message']
+        print(f"An error occurred: {e}")
+        responses = RESPONSES.get(stored_lang, RESPONSES['en'])
+        msg.body(responses['error_message'])
 
-    if final_response_body:
-        send_final_message(user_phone_number, twilio_phone_number, final_response_body)
+    # --- Final Fallback to prevent silent failures ---
+    if not msg.body:
+        print("DEBUG: No response was set. Sending default error message.")
+        responses = RESPONSES.get(stored_lang, RESPONSES['en'])
+        msg.body(responses['error_message'])
 
-    return str(resp)
+    return str(resp)    
 
 if __name__ == "__main__":
     app.run(port=5000, debug=True)
