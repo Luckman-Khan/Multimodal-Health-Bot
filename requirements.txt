@@ -4,7 +4,6 @@ google-generativeai
 requests
 python-dotenv
 gunicorn
-langdetect
-python-dateutil
 firebase-admin
 langdetect
+python-dateutil
