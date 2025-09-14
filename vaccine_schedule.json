@@ -1,0 +1,35 @@
+{
+  "schedule": [
+    {
+      "due_text": "At Birth",
+      "due_weeks": 0,
+      "name": "BCG, Oral Polio Vaccine (OPV 0), Hepatitis B (Hep-B 1)"
+    },
+    {
+      "due_text": "At 6 weeks",
+      "due_weeks": 6,
+      "name": "Pentavalent 1, OPV 1, Rotavirus 1, PCV 1"
+    },
+    {
+      "due_text": "At 10 weeks",
+      "due_weeks": 10,
+      "name": "Pentavalent 2, OPV 2, Rotavirus 2"
+    },
+    {
+      "due_text": "At 14 weeks",
+      "due_weeks": 14,
+      "name": "Pentavalent 3, OPV 3, Rotavirus 3, PCV 2"
+    },
+    {
+      "due_text": "At 9 months",
+      "due_months": 9,
+      "name": "Measles-Rubella (MR 1), PCV Booster"
+    },
+    {
+      "due_text": "At 16-24 months",
+      "due_months": 16,
+      "name": "DPT Booster 1, OPV Booster, MR 2"
+    }
+  ]
+}
+
