@@ -236,10 +236,10 @@ def whatsapp_reply():
                 if alert_found:
                     alert_prompt = f"Generate a concise health alert in {language_name} based on this data: Disease: {alert_found['disease']}, Recommendation: {alert_found['recommendation']}. Start with a warning emoji (⚠️)."
                     response = model.generate_content(alert_prompt)
-                    print(f"DEBUG: Raw AI Alert Response: {response.text}") # DEBUG LINE
+                    response.resolve() 
                     if response.text and response.text.strip():
                         msg.body(response.text)
-                    else: # Fallback for empty AI response
+                    else: 
                         msg.body(responses['error_message'])
                 else:
                     msg.body(responses['no_alert_found'].format(district_name=user_district.capitalize()))
@@ -282,25 +282,23 @@ def whatsapp_reply():
                     full_prompt = [prompt, f"User's text caption: {incoming_msg}", image_parts[0]]
                     response = model.generate_content(full_prompt)
                     response.resolve()
-                    print(f"DEBUG: Raw AI Image Response: {response.text}") # DEBUG LINE
                     if response.text and response.text.strip():
                         msg.body(response.text)
-                    else: # Fallback for empty AI response
+                    else: 
                         msg.body(responses['error_message'])
                 else:
                     msg.body(responses['image_error'])
             else:
                 prompt = PROMPT_TEXT.format(language_name=language_name, knowledge_base=knowledge_base, incoming_msg=incoming_msg)
                 response = model.generate_content(prompt)
-                print(f"DEBUG: Raw AI Text Response: {response.text}") # DEBUG LINE
+                response.resolve() 
                 if response.text and response.text.strip():
                     msg.body(response.text)
-                else: # Fallback for empty AI response
+                else: 
                     msg.body(responses['error_message'])
 
     except Exception as e:
         print(f"An error occurred: {e}")
-        # Use stored_lang determined at the start of the try block for error message language
         responses = RESPONSES.get(stored_lang, RESPONSES['en'])
         msg.body(responses['error_message'])
 
