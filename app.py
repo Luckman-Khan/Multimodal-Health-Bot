@@ -168,16 +168,21 @@ def whatsapp_reply():
         else:
             print("Database not connected. Using default language 'en'.")
 
+        # --- NEW: Language Whitelist ---
+        supported_langs = ['en', 'hi', 'bn', 'or']
         is_command = any(keyword in clean_msg for keyword in ['alert', 'district', 'feedback', 'schedule', 'vaccine'])
         print(f"Is command: {is_command}")
 
         if not is_command and incoming_msg and user_state is None:
             try:
-                current_lang = detect(incoming_msg)
-                if db and current_lang != stored_lang:
-                    print(f"Language changed from {stored_lang} to {current_lang}. Updating DB.")
-                    user_doc_ref.set({'language': current_lang}, merge=True)
-                    stored_lang = current_lang
+                detected_lang = detect(incoming_msg)
+                # Only update if the detected language is one we support
+                if detected_lang in supported_langs and db and detected_lang != stored_lang:
+                    print(f"Language changed from {stored_lang} to {detected_lang}. Updating DB.")
+                    user_doc_ref.set({'language': detected_lang}, merge=True)
+                    stored_lang = detected_lang
+                else:
+                    print(f"Detected '{detected_lang}', but it's not in the whitelist or is same as stored. No update.")
             except LangDetectException:
                 print("Language detection failed. Using stored language.")
                 pass
@@ -235,6 +240,7 @@ def whatsapp_reply():
                 msg.body(responses['vaccine_prompt'])
             else:
                 msg.body(responses['db_connection_error'])
+            return str(resp)
 
         elif clean_msg == 'alert':
             print("Keyword 'alert' detected.")
@@ -264,6 +270,7 @@ def whatsapp_reply():
                         msg.body(responses['error_message'])
                 else:
                     msg.body(responses['no_alert_found'].format(district_name=user_district.capitalize()))
+            return str(resp)
         
         elif clean_msg.startswith('set district'):
             print("Keyword 'set district' detected.")
@@ -277,6 +284,7 @@ def whatsapp_reply():
                     msg.body(responses['db_connection_error'])
             else:
                 msg.body(responses['provide_district_name'])
+            return str(resp)
 
         elif clean_msg.startswith('feedback'):
             print("Keyword 'feedback' detected.")
@@ -290,40 +298,40 @@ def whatsapp_reply():
                 msg.body(responses['feedback_success'])
             else:
                 msg.body(responses['feedback_prompt'])
+            return str(resp)
 
         # --- AI Processing Logic (if no keyword was matched) ---
-        elif not msg.body:
-            print("Step 3: No keyword matched. Proceeding to AI processing.")
-            model = genai.GenerativeModel('gemini-1.5-flash-latest')
-            if media_url:
-                print("Image detected. Preparing for image analysis.")
-                image_response = requests.get(media_url, auth=(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN))
-                mime_type = image_response.headers.get('Content-Type')
-                
-                if mime_type and mime_type.startswith('image/'):
-                    image_data = image_response.content
-                    image_parts = [{"mime_type": mime_type, "data": image_data}]
-                    prompt = PROMPT_IMAGE.format(language_name=language_name)
-                    full_prompt = [prompt, f"User's text caption: {incoming_msg}", image_parts[0]]
-                    response = model.generate_content(full_prompt)
-                    response.resolve()
-                    if response.text and response.text.strip():
-                        msg.body(response.text)
-                    else:
-                        msg.body(responses['error_message'])
-                else:
-                    msg.body(responses['image_error'])
-            else:
-                print("Text detected. Preparing for text analysis.")
-                prompt = PROMPT_TEXT.format(language_name=language_name, knowledge_base=knowledge_base, incoming_msg=incoming_msg)
-                print("Sending text prompt to Gemini...")
-                response = model.generate_content(prompt)
+        print("Step 3: No keyword matched. Proceeding to AI processing.")
+        model = genai.GenerativeModel('gemini-1.5-flash-latest')
+        if media_url:
+            print("Image detected. Preparing for image analysis.")
+            image_response = requests.get(media_url, auth=(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN))
+            mime_type = image_response.headers.get('Content-Type')
+            
+            if mime_type and mime_type.startswith('image/'):
+                image_data = image_response.content
+                image_parts = [{"mime_type": mime_type, "data": image_data}]
+                prompt = PROMPT_IMAGE.format(language_name=language_name)
+                full_prompt = [prompt, f"User's text caption: {incoming_msg}", image_parts[0]]
+                response = model.generate_content(full_prompt)
                 response.resolve()
-                print(f"DEBUG: Raw AI Text Response: {response.text}")
                 if response.text and response.text.strip():
                     msg.body(response.text)
-                else: 
+                else:
                     msg.body(responses['error_message'])
+            else:
+                msg.body(responses['image_error'])
+        else:
+            print("Text detected. Preparing for text analysis.")
+            prompt = PROMPT_TEXT.format(language_name=language_name, knowledge_base=knowledge_base, incoming_msg=incoming_msg)
+            print("Sending text prompt to Gemini...")
+            response = model.generate_content(prompt)
+            response.resolve()
+            print(f"DEBUG: Raw AI Text Response: {response.text}")
+            if response.text and response.text.strip():
+                msg.body(response.text)
+            else: 
+                msg.body(responses['error_message'])
 
     except Exception as e:
         print(f"CRITICAL ERROR in main try block: {e}")
