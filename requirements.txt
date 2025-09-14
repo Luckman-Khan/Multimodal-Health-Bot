@@ -6,4 +6,3 @@ python-dotenv
 gunicorn
 firebase-admin
 langdetect
-python-dateutil
