@@ -1,4 +1,4 @@
-# Doc-Dost: Your Multilingual AI Health Assistant
+# DocTalk: Your Multilingual AI Health Assistant
 
 A multilingual, multimodal AI health assistant on WhatsApp, designed to provide accessible, personalized, and proactive preventive healthcare information to rural and semi-urban populations in India.
 
