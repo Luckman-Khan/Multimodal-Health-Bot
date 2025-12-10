@@ -105,7 +105,7 @@ def get_gemini_response(text_input, image_data, mime_type, current_profile):
     try:
         
         model = genai.GenerativeModel(
-            model_name='gemini-2.5-flash',
+            model_name='gemini-2.5-flash-lite',
             system_instruction=get_system_prompt(current_profile)
         )
         
