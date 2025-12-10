@@ -1,9 +1,8 @@
-Flask
-twilio
+flask
+flask-sqlalchemy
+psycopg2-binary
 google-generativeai
-requests
+twilio
 python-dotenv
 gunicorn
-firebase-admin
-langdetect
-python-dateutil
+requests
