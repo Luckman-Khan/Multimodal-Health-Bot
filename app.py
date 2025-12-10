@@ -105,7 +105,7 @@ def get_gemini_response(text_input, image_data, mime_type, current_profile):
     try:
         
         model = genai.GenerativeModel(
-            model_name='gemini-2.5-flash-lite',
+            model_name='gemini-2.5-flash',
             system_instruction=get_system_prompt(current_profile)
         )
         
@@ -144,7 +144,9 @@ def whatsapp_reply():
         if media_url:
             # Twilio requires auth to download media
             try:
+                # ADDED AUTH HERE: Using HTTP Basic Auth with Account SID and Auth Token
                 media_req = requests.get(media_url, auth=(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN))
+                
                 if media_req.status_code == 200:
                     mime_type = media_req.headers.get('Content-Type')
                     image_data = media_req.content
